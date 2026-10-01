@@ -80,6 +80,18 @@ label{font-size:13.5px; font-weight:700; display:block; margin:12px 0 6px; color
 .cmt-form{display:flex; gap:8px; margin-top:8px;}
 .cmt-form input{flex:1; border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; font-size:14px; background:#fff; font-family:inherit; min-width:0;}
 .cmt-form button{white-space:nowrap; padding:10px 14px;}
+/* 설교 요약 */
+.sermon-title{font-weight:800; font-size:18px; margin:0 0 10px; color:var(--terra);}
+.sermon-summary{line-height:1.8; font-size:15px; white-space:pre-wrap;}
+/* 오늘의 순간 */
+.story-row{display:flex; gap:10px; overflow-x:auto; padding:4px 2px 10px; -webkit-overflow-scrolling:touch;}
+.story{flex:0 0 auto; width:150px; background:#FFFDF9; border:1.5px solid var(--line); border-radius:14px; padding:10px; font-size:13px;}
+.story-av svg{width:44px; height:44px;}
+.story-name{font-weight:800; margin:4px 0; font-size:13.5px;}
+.story-text{line-height:1.5; word-break:break-word;}
+.story img{width:100%; border-radius:10px; margin-top:6px;}
+.my-moment{background:#FFFDF9; border:1.5px solid var(--line); border-radius:14px; padding:12px; font-size:14px;}
+#momentBox textarea{width:100%; box-sizing:border-box;}
 nav.bottom{position:fixed; bottom:0; left:0; right:0; background:#FFFDF9; border-top:1px solid var(--line); z-index:10;}
 nav.bottom .inner{max-width:520px; margin:0 auto; display:flex;}
 nav.bottom button{flex:1; border:none; background:none; padding:10px 0 12px; font-size:11px; color:var(--muted); cursor:pointer; font-weight:700;}
@@ -179,6 +191,7 @@ pre.pack{background:#2E2A28; color:#EDE6DE; border:1px solid var(--line); border
 <!-- 학생 홈 -->
 <section class="screen" id="scr-home">
 <div id="demoBanner" class="demo-banner hidden">👀 데모 모드 — 입력한 내용은 이 브라우저에만 저장돼요</div>
+<div id="homeBanner" class="hidden" style="margin-bottom:12px;"><img id="homeBannerImg" alt="표어 현수막" style="width:100%;border-radius:16px;display:block;box-shadow:var(--shadow);"></div>
 <div class="card">
 <div style="display:flex;align-items:center;gap:12px;">
 <span id="homeAvatar"></span>
@@ -195,8 +208,13 @@ pre.pack{background:#2E2A28; color:#EDE6DE; border:1px solid var(--line); border
 <section class="screen" id="scr-mission"><div id="missionBox"></div>
 <button class="btn sub" onclick="go('scr-home')">← 홈으로</button>
 </section>
+<!-- 설교 요약 -->
+<section class="screen" id="scr-summary">
+<div class="card"><h2>📖 이번 주 설교 요약</h2><div id="summaryBox"></div></div>
+</section>
 <!-- 피드 -->
 <section class="screen" id="scr-feed">
+<div class="card"><h2>✨ 오늘의 순간</h2><p class="muted">하루에 한 번, 오늘의 갬성을 나눠보세요. 올리면 🌾 5 달란트!</p><div id="momentBox"></div></div>
 <div class="card"><h2>📮 친구들의 나눔</h2><p class="muted">적용 나누기와 인증샷은 4주간 볼 수 있어요.</p><div id="feedList"></div></div>
 </section>
 <!-- 아바타 -->
@@ -230,6 +248,7 @@ pre.pack{background:#2E2A28; color:#EDE6DE; border:1px solid var(--line); border
 <label>설교 제목</label><input id="wkTitle" placeholder="예: 달란트 비유">
 <label>주일 날짜</label><input id="wkDate" type="date">
 <label>설교 원고 (붙여넣기)</label><textarea id="wkSermon" placeholder="설교 원고를 여기에 붙여넣으세요"></textarea>
+<label>설교 요약 (학생용)</label><textarea id="wkSummary" style="min-height:90px;" placeholder="학생들에게 보여줄 설교 요약문을 입력하세요"></textarea>
 <button class="btn sub" id="copyPromptBtn">📋 미션 생성 프롬프트 복사</button>
 <p class="muted">복사한 프롬프트를 Muse 채팅에 붙여넣으면 미션팩 JSON을 만들어줘요. 받은 JSON을 아래에 붙여넣으세요.</p>
 <label>미션팩 JSON</label><textarea id="wkPack" style="min-height:170px;" placeholder='{"week_title":"...","missions":[...]}'></textarea>
@@ -261,6 +280,7 @@ pre.pack{background:#2E2A28; color:#EDE6DE; border:1px solid var(--line); border
 </div>
 <nav class="bottom hidden" id="bottomNav"><div class="inner">
 <button data-go="scr-home" class="on"><span class="ic">🏠</span>홈</button>
+<button data-go="scr-summary"><span class="ic">📖</span>요약</button>
 <button data-go="scr-feed"><span class="ic">📮</span>피드</button>
 <button data-go="scr-avatar"><span class="ic">🎭</span>아바타</button>
 <button data-go="scr-rank"><span class="ic">🏆</span>랭킹</button>
@@ -297,6 +317,8 @@ const SITE_CONFIG = {
 url: "https://qydceqlrjdtyalcfgule.supabase.co",
 key: ""
 };
+/* 표어 현수막 사진: base64(data:image/...) 또는 이미지 URL을 넣으면 홈 상단에 표시됩니다. 비어 있으면 숨김. */
+const BANNER_IMG = "";
 function activeCfg(){
 if(SITE_CONFIG.url && SITE_CONFIG.key) return {url: SITE_CONFIG.url, key: SITE_CONFIG.key};
 return store.cfg;
@@ -340,7 +362,7 @@ const d={profiles:[
 {id:'demo-s1',name:'민지',role:'student',pin:'1111',avatar:{type:'cat',color:'#FFB6C1',bg:'#FFE8E8',acc:'ribbon'}},
 {id:'demo-s2',name:'준혁',role:'student',pin:'2222',avatar:{type:'dog',color:'#E0AC69',bg:'#E8FFE8',acc:'none'}},
 {id:'demo-s3',name:'서연',role:'student',pin:'3333',avatar:{type:'rabbit',color:'#FFE0BD',bg:'#F0E8FF',acc:'hat'}}
-],weeks:[],submissions:[],ledger:[],comments:[]};
+],weeks:[],submissions:[],ledger:[],comments:[],moments:[]};
 const pack={week_title:'씨앗 비유',missions:[
 {day:'mon',type:'quiz',title:'말씀 퀴즈',talents:10,data:{question:'씨앗 비유에서 "좋은 땅"에 떨어진 씨는 무엇을 의미할까요?',choices:['말씀을 듣고 깨달아 열매 맺는 사람','박해 때문에 넘어지는 사람','걱정 때문에 열매 못 맺는 사람'],answer:0,explain:'좋은 땅은 말씀을 듣고 깨달아 백 배, 육십 배, 삼십 배의 열매를 맺는 사람입니다. (마 13:23)'}},
 {day:'tue',type:'application',title:'나만의 적용 나누기',talents:15,data:{prompt:'오늘 내 마음의 밭은 어떤 상태인가요? 돌밭? 가시밭? 좋은 땅? 솔직하게 나눠보세요.'}},
@@ -349,7 +371,7 @@ const pack={week_title:'씨앗 비유',missions:[
 {day:'fri',type:'worship',title:'찬양 듣기',talents:5,data:{title:'주 품에',artist:'-',youtube:'https://www.youtube.com/results?search_query=주+품에+찬양'}},
 {day:'sat',type:'application',title:'한 주 돌아보기',talents:15,data:{prompt:'이번 주 챌린지 중 가장 기억에 남는 실천과 그 이유를 나눠보세요.'}}
 ]};
-d.weeks.push({id:'demo-week1',title:'씨앗 비유',sunday_date:new Date().toISOString().slice(0,10),sermon_text:'(데모용 설교)',mission_pack:pack,is_active:true,created_at:new Date().toISOString()});
+d.weeks.push({id:'demo-week1',title:'씨앗 비유',sunday_date:new Date().toISOString().slice(0,10),sermon_text:'(데모용 설교)',summary:'씨앗 비유의 핵심은 "마음의 밭"이에요. 같은 말씀의 씨앗도 어떤 마음에 떨어지느냐에 따라 열매가 달라져요.\n\n1. 길가: 말씀을 듣지만 깨닫지 못해 빼앗기는 마음\n2. 돌밭: 기쁨으로 받지만 뿌리가 없어 시험에 넘어지는 마음\n3. 가시밭: 세상 걱정과 재물의 유혹에 눌려 열매 맺지 못하는 마음\n4. 좋은 땅: 말씀을 듣고 깨달아 30배, 60배, 100배의 열매를 맺는 마음\n\n이번 주에는 내 마음의 밭을 살펴보고, 좋은 땅이 되기로 결단해요! 🌱',mission_pack:pack,is_active:true,created_at:new Date().toISOString()});
 this.save(d); return d;
 },
 get(){return this.load()||this.seed();}
@@ -430,9 +452,9 @@ async getActiveWeek(){
 if(this.mode==='supabase'){const {data}=await sb.from('weeks').select('*').eq('is_active',true).order('created_at',{ascending:false}).limit(1);return (data&&data[0])||null;}
 const w=demoDB.get().weeks.filter(w=>w.is_active);return w[w.length-1]||null;
 },
-async createWeek(actorId,title,sunday,sermon,pack){
-if(this.mode==='supabase'){const {error}=await sb.rpc('admin_create_week',{p_actor_id:actorId,p_title:title,p_sunday:sunday,p_sermon:sermon,p_pack:pack});if(error) throw error;}
-else{const d=demoDB.get();d.weeks.forEach(w=>w.is_active=false);d.weeks.push({id:uid(),title,sunday_date:sunday,sermon_text:sermon,mission_pack:pack,is_active:true,created_at:new Date().toISOString()});demoDB.save(d);}
+async createWeek(actorId,title,sunday,sermon,summary,pack){
+if(this.mode==='supabase'){const {error}=await sb.rpc('admin_create_week',{p_actor_id:actorId,p_title:title,p_sunday:sunday,p_sermon:sermon,p_summary:summary||'',p_pack:pack});if(error) throw error;}
+else{const d=demoDB.get();d.weeks.forEach(w=>w.is_active=false);d.weeks.push({id:uid(),title,sunday_date:sunday,sermon_text:sermon,summary:summary||'',mission_pack:pack,is_active:true,created_at:new Date().toISOString()});demoDB.save(d);}
 },
 async getSubmissions(weekId){
 if(this.mode==='supabase'){const {data}=await sb.from('submissions').select('*').eq('week_id',weekId).order('created_at',{ascending:false});return data||[];}
@@ -451,6 +473,22 @@ async addComment(submissionId,studentId,authorName,text){
 if(this.mode==='supabase'){const {error}=await sb.rpc('add_comment',{p_submission_id:submissionId,p_student_id:studentId,p_author_name:authorName,p_text:text});if(error) throw error;}
 else{const d=demoDB.get();d.comments=d.comments||[];d.comments.push({id:uid(),submission_id:submissionId,student_id:studentId,author_name:authorName||'익명',text:text.trim(),created_at:new Date().toISOString()});demoDB.save(d);}
 },
+async postMoment(studentId,text,photoUrl){
+if(this.mode==='supabase'){const {error}=await sb.rpc('post_moment',{p_student_id:studentId,p_week_id:activeWeek?activeWeek.id:null,p_text:text,p_photo:photoUrl||null});if(error) throw error;}
+else{const d=demoDB.get();d.moments=d.moments||[];const today=todayStr();
+if(d.moments.some(m=>m.student_id===studentId&&m.moment_date===today)) throw new Error('오늘의 순간은 이미 올렸어요');
+d.moments.push({id:uid(),student_id:studentId,week_id:activeWeek?activeWeek.id:null,moment_date:today,text:text.trim(),photo_url:photoUrl||null,talents:MOMENT_TALENTS,created_at:new Date().toISOString()});
+d.ledger.push({id:uid(),student_id:studentId,week_id:activeWeek?activeWeek.id:null,amount:MOMENT_TALENTS,reason:'daily moment',created_at:new Date().toISOString()});demoDB.save(d);}
+},
+async getTodayMoments(){
+const today=todayStr();
+if(this.mode==='supabase'){const {data,error}=await sb.from('daily_moments').select('*').eq('moment_date',today).order('created_at',{ascending:false});if(error) throw error;return data||[];}
+return (demoDB.get().moments||[]).filter(m=>m.moment_date===today).sort((a,b)=>b.created_at.localeCompare(a.created_at));
+},
+async getWeekMoments(weekId){
+if(this.mode==='supabase'){const {data,error}=await sb.from('daily_moments').select('*').eq('week_id',weekId);if(error) throw error;return data||[];}
+return (demoDB.get().moments||[]).filter(m=>m.week_id===weekId);
+},
 async submit(studentId,weekId,day,type,content,photoUrl,talents){
 if(this.mode==='supabase'){const {error}=await sb.rpc('submit_mission',{p_student_id:studentId,p_week_id:weekId,p_day:day,p_type:type,p_content:content,p_photo:photoUrl,p_talents:talents});if(error) throw error;}
 else{const d=demoDB.get();if(d.submissions.some(s=>s.week_id===weekId&&s.student_id===studentId&&s.day===day&&s.mission_type===type)) throw new Error('already submitted');
@@ -467,12 +505,15 @@ return demoDB.get().ledger.some(l=>l.student_id===studentId&&l.week_id===weekId&
 },
 async myTalents(studentId,weekId){
 const subs=await this.getSubmissions(weekId);
-return subs.filter(s=>s.student_id===studentId).reduce((a,s)=>a+(s.talents||0),0);
+let t=subs.filter(s=>s.student_id===studentId).reduce((a,s)=>a+(s.talents||0),0);
+try{const ms=await this.getWeekMoments(weekId);t+=ms.filter(m=>m.student_id===studentId).reduce((a,m)=>a+(m.talents||0),0);}catch(e){}
+return t;
 },
 async weeklyBoard(weekId){
 if(this.mode==='supabase'){const {data}=await sb.from('weekly_talents').select('*').eq('week_id',weekId).order('talents',{ascending:false});return data||[];}
 const d=demoDB.get();const map={};
 d.submissions.filter(s=>s.week_id===weekId).forEach(s=>{map[s.student_id]=map[s.student_id]||{student_id:s.student_id,mission_count:0,talents:0};map[s.student_id].mission_count++;map[s.student_id].talents+=s.talents||0;});
+(d.moments||[]).filter(m=>m.week_id===weekId).forEach(m=>{map[m.student_id]=map[m.student_id]||{student_id:m.student_id,mission_count:0,talents:0};map[m.student_id].talents+=m.talents||0;});
 return Object.values(map).map(r=>{const p=d.profiles.find(x=>x.id===r.student_id);return {...r,name:p?p.name:'?',avatar:p?p.avatar:{}};}).sort((a,b)=>b.talents-a.talents);
 },
 async saveAvatar(studentId,avatar){
@@ -500,7 +541,8 @@ $(id).classList.add('on');
 document.querySelectorAll('nav.bottom button[data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===id));
 window.scrollTo(0,0);
 if(id==='scr-home') renderHome();
-if(id==='scr-feed') renderFeed();
+if(id==='scr-summary') renderSummary();
+if(id==='scr-feed'){renderFeed();renderMoments();}
 if(id==='scr-rank') renderRank();
 if(id==='scr-avatar') renderAvatarEditor();
 if(id==='scr-admin') renderAdmin();
@@ -594,6 +636,8 @@ mySubs=session&&session.role==='student'? (await DB.getSubmissions(activeWeek?ac
 }
 async function renderHome(){
 await refreshState();
+if(BANNER_IMG){$('homeBanner').classList.remove('hidden');$('homeBannerImg').src=BANNER_IMG;}
+else{$('homeBanner').classList.add('hidden');}
 $('homeAvatar').innerHTML=avatarSVG(session.avatar);
 $('homeHello').textContent=session.name+'님, 오늘도 말씀 챌린지!';
 $('homeWeek').textContent=activeWeek?('이번 주: '+activeWeek.title):'이번 주 미션 준비 중';
@@ -750,6 +794,70 @@ go('scr-home');
 }
 </script>
 <script>
+/* ================= 설교 요약 ================= */
+async function renderSummary(){
+const box=$('summaryBox'); box.innerHTML='<p class="muted">불러오는 중...</p>';
+await refreshState();
+if(!activeWeek){box.innerHTML='<p class="muted">이번 주 말씀이 아직 등록되지 않았어요.</p>';return;}
+const s=(activeWeek.summary||'').trim();
+box.innerHTML='<div class="sermon-title">'+esc(activeWeek.title)+'</div>'
++(s?'<div class="sermon-summary">'+esc(s).replace(/\n/g,'<br>')+'</div>'
+:'<p class="muted">이번 주 요약이 준비 중이에요.</p>');
+}
+/* ================= 오늘의 순간 ================= */
+function todayStr(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});}
+const MOMENT_TALENTS=5;
+async function renderMoments(){
+const box=$('momentBox'); if(!box) return;
+box.innerHTML='<p class="muted">불러오는 중...</p>';
+let all=[];
+try{ all=await DB.getTodayMoments(); }
+catch(e){box.innerHTML='<p class="muted">불러오지 못했어요.</p>';return;}
+const mine=all.find(m=>m.student_id===session.id)||null;
+const profiles=await DB.getProfiles(); const pmap={}; profiles.forEach(p=>pmap[p.id]=p);
+let h='';
+if(mine){
+h+='<div class="my-moment"><b>✅ 오늘의 순간 올림! (+'+MOMENT_TALENTS+'🌾)</b><p style="margin:6px 0;">'+esc(mine.text)+'</p>'
++(mine.photo_url?'<img src="'+esc(mine.photo_url)+'" style="width:100%;border-radius:12px;">':'')+'</div>';
+}else{
+h+='<textarea id="momentText" maxlength="300" placeholder="오늘의 갬성, 오늘의 순간을 나눠보세요 ✨ (300자까지)"></textarea>'
++'<div class="row2" style="margin-top:8px;"><label class="btn sub" style="text-align:center;cursor:pointer;">📷 사진<input type="file" id="momentPhoto" accept="image/*" class="hidden"></label>'
++'<button class="btn" id="momentPostBtn">올리기 ✨ (+'+MOMENT_TALENTS+'🌾)</button></div>'
++'<div id="momentPrev" style="margin-top:8px;"></div>';
+}
+h+='<h3 style="margin:14px 0 6px;">📸 친구들의 오늘</h3>';
+if(!all.length){h+='<p class="muted">아직 올라온 순간이 없어요. 첫 번째로 나눠보세요!</p>';}
+else{
+h+='<div class="story-row">'+all.map(m=>{
+const p=pmap[m.student_id]||{name:'?',avatar:{}};
+const me=m.student_id===session.id?' <span class="muted">(나)</span>':'';
+return '<div class="story"><span class="story-av">'+avatarSVG(p.avatar)+'</span>'
++'<div class="story-name">'+esc(p.name)+me+'</div>'
++'<div class="story-text">'+esc(m.text)+'</div>'
++(m.photo_url?'<img src="'+esc(m.photo_url)+'">':'')+'</div>';
+}).join('')+'</div>';
+}
+box.innerHTML=h;
+if(!mine){
+$('momentPhoto').addEventListener('change',e=>{
+const f=e.target.files[0]; if(!f)return;
+const r=new FileReader();
+r.onload=()=>{$('momentPrev').innerHTML='<img src="'+r.result+'" style="width:100%;border-radius:12px;">';window._momentFile=f;};
+r.readAsDataURL(f);
+});
+$('momentPostBtn').addEventListener('click',async()=>{
+const t=$('momentText').value.trim();
+if(!t){toast('내용을 입력하세요');return;}
+try{
+let url=null;
+if(window._momentFile){url=await DB.uploadPhoto(session.id,window._momentFile);window._momentFile=null;}
+await DB.postMoment(session.id,t,url);
+toast('오늘의 순간 등록! +'+MOMENT_TALENTS+' 달란트 🌾');
+renderMoments(); renderHome();
+}catch(e){toast('등록 실패: '+e.message);}
+});
+}
+}
 /* ================= 피드 ================= */
 async function renderFeed(){
 const box=$('feedList'); box.innerHTML='<p class="muted">불러오는 중...</p>';
@@ -900,7 +1008,7 @@ $('packSaveBtn').addEventListener('click',async()=>{
 const p=parsePack(); if(!p)return;
 const title=$('wkTitle').value.trim()||p.week_title||'이번 주 말씀';
 const date=$('wkDate').value||new Date().toISOString().slice(0,10);
-try{await DB.createWeek(session.id,title,date,$('wkSermon').value.trim(),p);toast('이번 주 미션이 열렸어요! 🌱');$('wkPack').value='';$('packPreview').innerHTML='';}
+try{await DB.createWeek(session.id,title,date,$('wkSermon').value.trim(),$('wkSummary').value.trim(),p);toast('이번 주 미션이 열렸어요! 🌱');$('wkPack').value='';$('wkSermon').value='';$('wkSummary').value='';$('packPreview').innerHTML='';}
 catch(e){toast('저장 실패: '+e.message);}
 });
 $('copyPromptBtn').addEventListener('click',async()=>{
