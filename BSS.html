@@ -294,12 +294,29 @@ const DAY_KO={mon:'월',tue:'화',wed:'수',thu:'목',fri:'금',sat:'토',sun:'�
 const TYPE_KO={quiz:'말씀 퀴즈',application:'적용 나누기',action:'실천 챌린지',photo:'인증샷',worship:'찬양 듣기'};
 const TYPE_EMOJI={quiz:'📖',application:'✍️',action:'✅',photo:'📸',worship:'🎵'};
 const TALENT_DEF={quiz:10,application:15,action:10,photo:20,worship:5,bonus:20};
-const AV_TYPES=['person','cat','dog','rabbit','bear'];
-const AV_TYPE_KO={person:'사람',cat:'고양이',dog:'강아지',rabbit:'토끼',bear:'곰'};
-const AV_COLORS=['#FFE0BD','#F1C27D','#E0AC69','#C68642','#A67C52','#FFB6C1'];
-const AV_BGS=['#FFE8E8','#E8F4FF','#E8FFE8','#FFF4E0','#F0E8FF','#E0F7FA'];
-const AV_ACCS=['none','glasses','hat','ribbon'];
-const AV_ACC_KO={none:'없음',glasses:'안경',hat:'모자',ribbon:'리본'};
+const AV_TYPES=['person','cat','dog','rabbit','bear','fox','panda'];
+const AV_TYPE_KO={person:'사람',cat:'고양이',dog:'강아지',rabbit:'토끼',bear:'곰',fox:'여우',panda:'판다'};
+const AV_COLORS=['#FFE0BD','#FFDFC4','#F1C27D','#E0AC69','#C68642','#8D5524','#FFB6C1','#FFDAC1','#E2F0CB','#B5EAD7','#C7CEEA','#F3D1F4'];
+const AV_BGS=['#FFE8E8','#E8F4FF','#E8FFE8','#FFF4E0','#F0E8FF','#E0F7FA','#FFF9DB','#F3E5F5','#E0F2F1','#FCE4EC'];
+/* 악세사리는 슬롯별로 최대 1개씩 (머리/얼굴/귀) — 모자+안경 같은 조합 가능 */
+const AV_ACC_SLOT={hat:'head',cap:'head',beanie:'head',crown:'head',ribbon:'head',flower:'head',glasses:'face',sunglasses:'face',headphones:'ears'};
+const AV_ACC_KO={hat:'🎩 고깔모자',cap:'🧢 캡모자',beanie:'⛄ 비니',crown:'👑 왕관',ribbon:'🎀 리본',flower:'🌸 꽃',glasses:'👓 안경',sunglasses:'🕶️ 선글라스',headphones:'🎧 헤드폰'};
+const AV_ACC_COLORS=['#C05B4D','#E9A44C','#3F8E7D','#4A90D9','#9B59B6','#2ECC71','#FF6B6B','#3A2E2A'];
+const AV_SLOT_KO={head:'머리',face:'얼굴',ears:'귀'};
+/* 구형 {acc:'glasses'} → 신형 {accs:['glasses']} 자동 변환 */
+function normAvatar(a){
+const d={type:'person',color:'#FFE0BD',bg:'#FFE8E8',accs:[],accColor:'#C05B4D'};
+a=a||{};
+const s=Object.assign({},d,a);
+if(!Array.isArray(a.accs)){
+s.accs=[];
+const old=a.acc;
+if(old&&old!=='none'&&AV_ACC_SLOT[old]) s.accs=[old];
+}else s.accs=a.accs.filter(x=>AV_ACC_SLOT[x]);
+if(!s.accColor) s.accColor='#C05B4D';
+if(AV_TYPES.indexOf(s.type)<0) s.type='person';
+return s;
+}
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -337,19 +354,34 @@ set settings(v){localStorage.setItem('mc_settings',JSON.stringify(v));}
 </script>
 <script>
 /* ================= 아바타 SVG ================= */
+function accSVG(id,AC){
+if(id==='glasses') return '<circle cx="46" cy="66" r="11" fill="none" stroke="'+AC+'" stroke-width="3.5"/><circle cx="74" cy="66" r="11" fill="none" stroke="'+AC+'" stroke-width="3.5"/><line x1="57" y1="66" x2="63" y2="66" stroke="'+AC+'" stroke-width="3.5"/>';
+if(id==='sunglasses') return '<g><rect x="33" y="58" width="25" height="17" rx="8.5" fill="#3A2E2A"/><rect x="62" y="58" width="25" height="17" rx="8.5" fill="#3A2E2A"/><rect x="33" y="58" width="25" height="17" rx="8.5" fill="none" stroke="'+AC+'" stroke-width="2.5"/><rect x="62" y="58" width="25" height="17" rx="8.5" fill="none" stroke="'+AC+'" stroke-width="2.5"/><line x1="58" y1="63" x2="62" y2="63" stroke="#3A2E2A" stroke-width="3"/><line x1="40" y1="62" x2="46" y2="70" stroke="#fff" stroke-width="2" opacity=".5"/><line x1="69" y1="62" x2="75" y2="70" stroke="#fff" stroke-width="2" opacity=".5"/></g>';
+if(id==='hat') return '<path d="M30 44 Q60 4 90 44 Z" fill="'+AC+'"/><circle cx="60" cy="16" r="7" fill="#fff"/>';
+if(id==='cap') return '<path d="M30 52 Q32 20 60 20 Q88 20 90 52 Z" fill="'+AC+'"/><ellipse cx="60" cy="52" rx="33" ry="7" fill="'+AC+'"/><ellipse cx="60" cy="52" rx="33" ry="7" fill="#000" opacity=".12"/><circle cx="60" cy="22" r="4" fill="#fff" opacity=".9"/>';
+if(id==='beanie') return '<path d="M32 54 L32 40 Q32 18 60 18 Q88 18 88 40 L88 54 Z" fill="'+AC+'"/><rect x="30" y="42" width="60" height="14" rx="7" fill="'+AC+'"/><rect x="30" y="42" width="60" height="14" rx="7" fill="#000" opacity=".15"/><circle cx="60" cy="16" r="8" fill="#fff"/>';
+if(id==='crown') return '<path d="M38 46 L38 24 L49 34 L60 20 L71 34 L82 24 L82 46 Z" fill="'+AC+'"/><rect x="38" y="42" width="44" height="7" fill="#000" opacity=".15"/><circle cx="49" cy="38" r="2.6" fill="#fff"/><circle cx="60" cy="38" r="2.6" fill="#fff"/><circle cx="71" cy="38" r="2.6" fill="#fff"/>';
+if(id==='ribbon') return '<g transform="translate(88,40)"><ellipse cx="-8" cy="0" rx="9" ry="6" fill="'+AC+'" transform="rotate(-24)"/><ellipse cx="8" cy="0" rx="9" ry="6" fill="'+AC+'" transform="rotate(24)"/><circle r="5" fill="'+AC+'"/><circle r="5" fill="#000" opacity=".15"/></g>';
+if(id==='flower') return '<g transform="translate(88,42)"><circle cx="0" cy="-9" r="6" fill="'+AC+'"/><circle cx="8.5" cy="-2.8" r="6" fill="'+AC+'"/><circle cx="5.3" cy="7.3" r="6" fill="'+AC+'"/><circle cx="-5.3" cy="7.3" r="6" fill="'+AC+'"/><circle cx="-8.5" cy="-2.8" r="6" fill="'+AC+'"/><circle r="4.5" fill="#FFD93D"/></g>';
+if(id==='headphones') return '<path d="M27 66 Q24 22 60 22 Q96 22 93 66" stroke="'+AC+'" stroke-width="7" fill="none" stroke-linecap="round"/><rect x="18" y="56" width="17" height="26" rx="8.5" fill="'+AC+'"/><rect x="85" y="56" width="17" height="26" rx="8.5" fill="'+AC+'"/><rect x="18" y="56" width="17" height="26" rx="8.5" fill="#000" opacity=".12"/><rect x="85" y="56" width="17" height="26" rx="8.5" fill="#000" opacity=".12"/>';
+return '';
+}
 function avatarSVG(a){
-a=Object.assign({type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'},a||{});
-const c=a.color, bg=a.bg;
-let ears='';
-if(a.type==='cat') ears='<path d="M28 34 L22 8 L48 24 Z" fill="'+c+'"/><path d="M92 34 L98 8 L72 24 Z" fill="'+c+'"/><path d="M31 28 L28 14 L42 24 Z" fill="#FFB6C1"/><path d="M89 28 L92 14 L78 24 Z" fill="#FFB6C1"/>';
-else if(a.type==='dog') ears='<ellipse cx="26" cy="58" rx="10" ry="20" fill="'+c+'" transform="rotate(18 26 58)"/><ellipse cx="94" cy="58" rx="10" ry="20" fill="'+c+'" transform="rotate(-18 94 58)"/>';
-else if(a.type==='rabbit') ears='<ellipse cx="44" cy="18" rx="9" ry="22" fill="'+c+'"/><ellipse cx="76" cy="18" rx="9" ry="22" fill="'+c+'"/><ellipse cx="44" cy="20" rx="4" ry="13" fill="#FFB6C1"/><ellipse cx="76" cy="20" rx="4" ry="13" fill="#FFB6C1"/>';
-else if(a.type==='bear') ears='<circle cx="30" cy="34" r="11" fill="'+c+'"/><circle cx="90" cy="34" r="11" fill="'+c+'"/><circle cx="30" cy="34" r="5" fill="#FFB6C1"/><circle cx="90" cy="34" r="5" fill="#FFB6C1"/>';
-let acc='';
-if(a.acc==='glasses') acc='<circle cx="46" cy="66" r="11" fill="none" stroke="#3A2E2A" stroke-width="3"/><circle cx="74" cy="66" r="11" fill="none" stroke="#3A2E2A" stroke-width="3"/><line x1="57" y1="66" x2="63" y2="66" stroke="#3A2E2A" stroke-width="3"/>';
-else if(a.acc==='hat') acc='<path d="M30 44 Q60 4 90 44 Z" fill="#FF6B6B"/><circle cx="60" cy="16" r="7" fill="#fff"/>';
-else if(a.acc==='ribbon') acc='<g transform="translate(88,40)"><ellipse cx="-8" cy="0" rx="9" ry="6" fill="#FF6B6B" transform="rotate(-24)"/><ellipse cx="8" cy="0" rx="9" ry="6" fill="#FF6B6B" transform="rotate(24)"/><circle r="5" fill="#E85555"/></g>';
-return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" rx="26" fill="'+bg+'"/>'+ears+'<circle cx="60" cy="68" r="34" fill="'+c+'"/><circle cx="48" cy="66" r="4.5" fill="#3A2E2A"/><circle cx="72" cy="66" r="4.5" fill="#3A2E2A"/><ellipse cx="40" cy="76" rx="6" ry="4" fill="#FFB6C1" opacity=".8"/><ellipse cx="80" cy="76" rx="6" ry="4" fill="#FFB6C1" opacity=".8"/><path d="M54 80 Q60 85 66 80" stroke="#3A2E2A" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+acc+'</svg>';
+const v=normAvatar(a);
+const c=v.color, bg=v.bg, AC=v.accColor;
+let ears='', faceExtra='';
+if(v.type==='cat') ears='<path d="M28 34 L22 8 L48 24 Z" fill="'+c+'"/><path d="M92 34 L98 8 L72 24 Z" fill="'+c+'"/><path d="M31 28 L28 14 L42 24 Z" fill="#FFB6C1"/><path d="M89 28 L92 14 L78 24 Z" fill="#FFB6C1"/>';
+else if(v.type==='dog') ears='<ellipse cx="26" cy="58" rx="10" ry="20" fill="'+c+'" transform="rotate(18 26 58)"/><ellipse cx="94" cy="58" rx="10" ry="20" fill="'+c+'" transform="rotate(-18 94 58)"/>';
+else if(v.type==='rabbit') ears='<ellipse cx="44" cy="18" rx="9" ry="22" fill="'+c+'"/><ellipse cx="76" cy="18" rx="9" ry="22" fill="'+c+'"/><ellipse cx="44" cy="20" rx="4" ry="13" fill="#FFB6C1"/><ellipse cx="76" cy="20" rx="4" ry="13" fill="#FFB6C1"/>';
+else if(v.type==='bear') ears='<circle cx="30" cy="34" r="11" fill="'+c+'"/><circle cx="90" cy="34" r="11" fill="'+c+'"/><circle cx="30" cy="34" r="5" fill="#FFB6C1"/><circle cx="90" cy="34" r="5" fill="#FFB6C1"/>';
+else if(v.type==='fox'){ ears='<path d="M26 36 L18 4 L52 24 Z" fill="'+c+'"/><path d="M94 36 L102 4 L68 24 Z" fill="'+c+'"/><path d="M29 29 L26 12 L42 23 Z" fill="#FFB6C1"/><path d="M91 29 L94 12 L78 23 Z" fill="#FFB6C1"/>'; faceExtra='<ellipse cx="60" cy="82" rx="14" ry="9" fill="#fff" opacity=".85"/>'; }
+else if(v.type==='panda'){ ears='<circle cx="30" cy="34" r="11" fill="#3A2E2A"/><circle cx="90" cy="34" r="11" fill="#3A2E2A"/>'; faceExtra='<ellipse cx="48" cy="66" rx="8.5" ry="10.5" fill="#3A2E2A" transform="rotate(-12 48 66)"/><ellipse cx="72" cy="66" rx="8.5" ry="10.5" fill="#3A2E2A" transform="rotate(12 72 66)"/>'; }
+let head='', face='', earsAcc='';
+v.accs.forEach(id=>{
+const s=AV_ACC_SLOT[id], svg=accSVG(id,AC);
+if(s==='head') head+=svg; else if(s==='face') face+=svg; else if(s==='ears') earsAcc+=svg;
+});
+return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" rx="26" fill="'+bg+'"/>'+ears+'<circle cx="60" cy="68" r="34" fill="'+c+'"/>'+faceExtra+'<circle cx="48" cy="66" r="4.5" fill="#3A2E2A"/><circle cx="72" cy="66" r="4.5" fill="#3A2E2A"/><ellipse cx="40" cy="76" rx="6" ry="4" fill="#FFB6C1" opacity=".8"/><ellipse cx="80" cy="76" rx="6" ry="4" fill="#FFB6C1" opacity=".8"/><path d="M54 80 Q60 85 66 80" stroke="#3A2E2A" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+head+face+earsAcc+'</svg>';
 }
 /* ================= 데모 DB (localStorage) ================= */
 const demoDB={
@@ -358,10 +390,10 @@ load(){try{return JSON.parse(localStorage.getItem(this.key))||null;}catch(e){ret
 save(d){localStorage.setItem(this.key,JSON.stringify(d));},
 seed(){
 const d={profiles:[
-{id:'demo-admin',name:'관리자',role:'admin',pin:'1234',avatar:{type:'person',color:'#F1C27D',bg:'#E8F4FF',acc:'glasses'}},
-{id:'demo-s1',name:'민지',role:'student',pin:'1111',avatar:{type:'cat',color:'#FFB6C1',bg:'#FFE8E8',acc:'ribbon'}},
-{id:'demo-s2',name:'준혁',role:'student',pin:'2222',avatar:{type:'dog',color:'#E0AC69',bg:'#E8FFE8',acc:'none'}},
-{id:'demo-s3',name:'서연',role:'student',pin:'3333',avatar:{type:'rabbit',color:'#FFE0BD',bg:'#F0E8FF',acc:'hat'}}
+{id:'demo-admin',name:'관리자',role:'admin',pin:'1234',avatar:{type:'person',color:'#F1C27D',bg:'#E8F4FF',accs:['glasses'],accColor:'#3A2E2A'}},
+{id:'demo-s1',name:'민지',role:'student',pin:'1111',avatar:{type:'cat',color:'#FFB6C1',bg:'#FFE8E8',accs:['ribbon'],accColor:'#FF6B6B'}},
+{id:'demo-s2',name:'준혁',role:'student',pin:'2222',avatar:{type:'dog',color:'#E0AC69',bg:'#E8FFE8',accs:[],accColor:'#C05B4D'}},
+{id:'demo-s3',name:'서연',role:'student',pin:'3333',avatar:{type:'rabbit',color:'#FFE0BD',bg:'#F0E8FF',accs:['hat'],accColor:'#E9A44C'}}
 ],weeks:[],submissions:[],ledger:[],comments:[],moments:[]};
 const pack={week_title:'씨앗 비유',missions:[
 {day:'mon',type:'quiz',title:'말씀 퀴즈',talents:10,data:{question:'씨앗 비유에서 "좋은 땅"에 떨어진 씨는 무엇을 의미할까요?',choices:['말씀을 듣고 깨달아 열매 맺는 사람','박해 때문에 넘어지는 사람','걱정 때문에 열매 못 맺는 사람'],answer:0,explain:'좋은 땅은 말씀을 듣고 깨달아 백 배, 육십 배, 삼십 배의 열매를 맺는 사람입니다. (마 13:23)'}},
@@ -441,7 +473,7 @@ else{const d=demoDB.get();if(d.profiles.some(p=>p.name===name)) throw new Error(
 /* 학생 자가 회원가입 */
 async studentSignup(name,pin){
 if(this.mode==='supabase'){const {data,error}=await sb.rpc('student_signup',{p_name:name,p_pin:pin});if(error) throw error;return data;}
-else{const d=demoDB.get();if(d.profiles.some(p=>p.name===name)) throw new Error('이미 등록된 이름이에요');const nid=uid();d.profiles.push({id:nid,name,role:'student',pin,avatar:{type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'}});demoDB.save(d);return nid;}
+else{const d=demoDB.get();if(d.profiles.some(p=>p.name===name)) throw new Error('이미 등록된 이름이에요');const nid=uid();d.profiles.push({id:nid,name,role:'student',pin,avatar:{type:'person',color:'#FFE0BD',bg:'#FFE8E8',accs:[],accColor:'#C05B4D'}});demoDB.save(d);return nid;}
 },
 /* 관리자 PIN 변경 */
 async changeAdminPin(actorId,curPin,newPin){
@@ -577,7 +609,7 @@ $('cfgDemo').addEventListener('click',async()=>{window.__forceDemo=true;store.cf
 $('backToCfg').addEventListener('click',()=>go('scr-config'));
 /* ================= 로그인 ================= */
 let loginTab='stu'; // stu | adm | signup
-let suAvDraft={type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'};
+let suAvDraft=normAvatar();
 function setLoginTab(t){
 loginTab=t;
 if(t==='signup'&&$('suAvPicker')){ $('suAvPicker').innerHTML=avatarPickerHTML('su'); bindAvatarPicker('su',()=>suAvDraft,v=>{suAvDraft=v;}); }
@@ -625,7 +657,7 @@ if(p1!==p2){toast('PIN 확인이 일치하지 않아요');return;}
 try{
 const newId=await DB.studentSignup(name,p1);
 try{await DB.saveAvatar(newId,suAvDraft);}catch(e){}
-suAvDraft={type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'};
+suAvDraft=normAvatar();
 toast('가입 완료! 로그인해주세요 ✦');
 setLoginTab('stu');
 await enterLogin();
@@ -940,29 +972,49 @@ return '<div class="rank-row '+cls+'"><div class="rank-num">'+(i+1)+'</div>'+ava
 }).join('')||'<p class="muted">아직 적립된 달란트가 없어요.</p>';
 }
 /* ================= 아바타 에디터 ================= */
-let avDraft={type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'};
+let avDraft=normAvatar();
 function avatarPickerHTML(p){
 return '<div class="av-preview" id="'+p+'Preview"></div>'
-+'<h3>종류</h3><div class="av-grid" id="'+p+'Types"></div>'
++'<h3>종류</h3><div class="av-grid" id="'+p+'Types" style="grid-template-columns:repeat(4,1fr);"></div>'
 +'<h3>색상</h3><div class="swatch-grid" id="'+p+'Colors"></div>'
 +'<h3>배경</h3><div class="swatch-grid" id="'+p+'Bgs"></div>'
-+'<h3>악세사리</h3><div class="av-grid" id="'+p+'Accs" style="grid-template-columns:repeat(4,1fr);"></div>';
++'<h3>악세사리 · 머리</h3><div class="av-grid" id="'+p+'AccHead" style="grid-template-columns:repeat(3,1fr);"></div>'
++'<h3>악세사리 · 얼굴</h3><div class="av-grid" id="'+p+'AccFace" style="grid-template-columns:repeat(3,1fr);"></div>'
++'<h3>악세사리 · 귀</h3><div class="av-grid" id="'+p+'AccEars" style="grid-template-columns:repeat(2,1fr);"></div>'
++'<h3>악세사리 색상</h3><div class="swatch-grid" id="'+p+'AccColors" style="grid-template-columns:repeat(8,1fr);"></div>';
+}
+function accSlotBtns(g,slot){
+const ids=Object.keys(AV_ACC_SLOT).filter(k=>AV_ACC_SLOT[k]===slot);
+const noneOn=!g.accs.some(id=>AV_ACC_SLOT[id]===slot);
+return '<button data-acc="" data-slot="'+slot+'" class="'+(noneOn?'on':'')+'">없음</button>'
++ids.map(id=>'<button data-acc="'+id+'" data-slot="'+slot+'" class="'+(g.accs.indexOf(id)>=0?'on':'')+'">'+AV_ACC_KO[id]+'</button>').join('');
 }
 function bindAvatarPicker(p,get,set){
-const g=get();
+const g=normAvatar(get()); set(g);
 const re=()=>bindAvatarPicker(p,get,set);
 $(p+'Preview').innerHTML=avatarSVG(g);
-$(p+'Types').innerHTML=AV_TYPES.map(t=>'<button data-t="'+t+'" class="'+(g.type===t?'on':'')+'">'+avatarSVG({type:t,color:g.color,bg:'#fff',acc:'none'})+'<br>'+AV_TYPE_KO[t]+'</button>').join('');
-$(p+'Types').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const d=get();d.type=b.dataset.t;set(d);re();}));
+$(p+'Types').innerHTML=AV_TYPES.map(t=>'<button data-t="'+t+'" class="'+(g.type===t?'on':'')+'">'+avatarSVG({type:t,color:g.color,bg:'#fff',accs:[],accColor:g.accColor})+'<br>'+AV_TYPE_KO[t]+'</button>').join('');
+$(p+'Types').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const d=normAvatar(get());d.type=b.dataset.t;set(d);re();}));
 $(p+'Colors').innerHTML=AV_COLORS.map(c=>'<div class="swatch '+(g.color===c?'on':'')+'" data-c="'+c+'" style="background:'+c+'"></div>').join('');
-$(p+'Colors').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{const d=get();d.color=s.dataset.c;set(d);re();}));
+$(p+'Colors').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{const d=normAvatar(get());d.color=s.dataset.c;set(d);re();}));
 $(p+'Bgs').innerHTML=AV_BGS.map(c=>'<div class="swatch '+(g.bg===c?'on':'')+'" data-c="'+c+'" style="background:'+c+'"></div>').join('');
-$(p+'Bgs').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{const d=get();d.bg=s.dataset.c;set(d);re();}));
-$(p+'Accs').innerHTML=AV_ACCS.map(a=>'<button data-a="'+a+'" class="'+(g.acc===a?'on':'')+'">'+AV_ACC_KO[a]+'</button>').join('');
-$(p+'Accs').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const d=get();d.acc=b.dataset.a;set(d);re();}));
+$(p+'Bgs').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{const d=normAvatar(get());d.bg=s.dataset.c;set(d);re();}));
+['head','face','ears'].forEach(slot=>{
+const box=$(p+'Acc'+slot[0].toUpperCase()+slot.slice(1));
+box.innerHTML=accSlotBtns(g,slot);
+box.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+const d=normAvatar(get()), id=b.dataset.acc;
+if(!id) d.accs=d.accs.filter(x=>AV_ACC_SLOT[x]!==slot);
+else if(d.accs.indexOf(id)>=0) d.accs=d.accs.filter(x=>x!==id);
+else{ d.accs=d.accs.filter(x=>AV_ACC_SLOT[x]!==slot); d.accs.push(id); }
+set(d); re();
+}));
+});
+$(p+'AccColors').innerHTML=AV_ACC_COLORS.map(c=>'<div class="swatch '+(g.accColor===c?'on':'')+'" data-c="'+c+'" style="background:'+c+'"></div>').join('');
+$(p+'AccColors').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{const d=normAvatar(get());d.accColor=s.dataset.c;set(d);re();}));
 }
 function renderAvatarEditor(){
-avDraft=Object.assign({type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'},session.avatar||{});
+avDraft=normAvatar(session.avatar);
 $('avPicker').innerHTML=avatarPickerHTML('av');
 bindAvatarPicker('av',()=>avDraft,v=>{avDraft=v;});
 }
