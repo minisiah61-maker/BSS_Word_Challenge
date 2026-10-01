@@ -7,9 +7,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg:#F6F1E7; --card:#FFFDF9; --ink:#3A3430; --muted:#9C9184;
-  --pri:#C05B4D; --pri-d:#A8483C; --acc:#E9A44C; --mint:#3F8E7D; --sky:#7FA8C9; --grape:#A78BFA;
-  --line:#EBDFCC; --r:18px;
+--bg:#F6F1E7; --card:#FFFDF9; --ink:#3A3430; --muted:#9C9184;
+--pri:#C05B4D; --pri-d:#A8483C; --acc:#E9A44C; --mint:#3F8E7D; --sky:#7FA8C9; --grape:#A78BFA;
+--line:#EBDFCC; --r:18px;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif; background-color:var(--bg); background-image:radial-gradient(700px 320px at 12% -6%,rgba(192,91,77,.07),transparent),radial-gradient(700px 320px at 88% -6%,rgba(233,164,76,.08),transparent); color:var(--ink); font-size:16px; line-height:1.55;}
@@ -63,6 +63,23 @@ label{font-size:13.5px; font-weight:700; display:block; margin:12px 0 6px; color
 .feed-head{font-size:13px; color:var(--muted); margin-bottom:4px;}
 .feed-head b{color:var(--ink); font-size:14px;}
 .feed-photo{width:100%; border-radius:12px; margin-top:8px;}
+.week-list{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+.week-row{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:12px 14px; cursor:pointer; font-size:14.5px; color:var(--ink); font-family:inherit;}
+.week-row:active{transform:scale(.98);}
+.wr-day{font-weight:800; color:var(--pri); min-width:36px;}
+.wr-title{flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.wr-st{font-size:12.5px; color:var(--muted); white-space:nowrap;}
+.week-row.done{opacity:.7;}
+.week-row.today{border-color:var(--pri); background:#FFF9F3;}
+.cmt-toggle{background:none; border:none; color:var(--mint); font-weight:700; font-size:13.5px; cursor:pointer; padding:8px 0 2px; font-family:inherit;}
+.cmt-box{margin-top:6px; border-top:1px dashed var(--line); padding-top:8px;}
+.cmt-list{display:flex; flex-direction:column; gap:6px; margin:6px 0;}
+.cmt{background:#FAF6EC; border-radius:10px; padding:8px 10px; font-size:13.5px;}
+.cmt b{color:var(--ink); margin-right:6px;}
+.cmt .cmt-date{color:var(--muted); font-size:12px; margin-left:6px;}
+.cmt-form{display:flex; gap:8px; margin-top:8px;}
+.cmt-form input{flex:1; border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; font-size:14px; background:#fff; font-family:inherit; min-width:0;}
+.cmt-form button{white-space:nowrap; padding:10px 14px;}
 nav.bottom{position:fixed; bottom:0; left:0; right:0; background:#FFFDF9; border-top:1px solid var(--line); z-index:10;}
 nav.bottom .inner{max-width:520px; margin:0 auto; display:flex;}
 nav.bottom button{flex:1; border:none; background:none; padding:10px 0 12px; font-size:11px; color:var(--muted); cursor:pointer; font-weight:700;}
@@ -104,164 +121,152 @@ pre.pack{background:#2E2A28; color:#EDE6DE; border:1px solid var(--line); border
 </head>
 <body>
 <header class="top"><div class="inner">
-  <div class="logo">✦ 복사생 <span class="grad">말씀 챌린지</span></div>
-  <div class="me hidden" id="meBox"><span id="meName"></span><span id="meAvatar"></span><button id="logoutBtn" style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;">로그아웃</button></div>
+<div class="logo">✦ 복사생 <span class="grad">말씀 챌린지</span></div>
+<div class="me hidden" id="meBox"><span id="meName"></span><span id="meAvatar"></span><button id="logoutBtn" style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;">로그아웃</button></div>
 </div></header>
 <div class="wrap">
-
-  <!-- 연결 설정 -->
-  <section class="screen" id="scr-config">
-    <div class="card center" style="padding:38px 20px;">
-      <div class="eyebrow">DAILY WORD CHALLENGE</div>
-      <h2 style="font-size:32px; margin:12px 0 10px;">복사생 <span class="grad">말씀 챌린지</span></h2>
-      <p class="muted">주일 말씀을 월–토 매일 적용하고<br>달란트를 모아가는 중고등부 챌린지</p>
-      <p class="muted" style="margin-top:16px; font-size:12.5px; line-height:1.7;">"즐거워하는 자들과 함께 즐거워하고<br>우는 자들과 함께 울라" <b>(롬 12:15)</b><br><span style="font-size:11.5px;">2026 중고등부 표어 · 오고 싶은 중고등부, 머물고 싶은 충무교회</span></p>
-    </div>
-    <div class="card">
-      <h2>Supabase 연결</h2>
-      <p class="muted">Supabase 프로젝트의 URL과 anon key를 입력하세요. (브라우저에만 저장됩니다)</p>
-      <label>Supabase URL</label><input id="cfgUrl" placeholder="https://xxxx.supabase.co">
-      <label>Anon Key</label><input id="cfgKey" placeholder="eyJhbGciOi...">
-      <button class="btn" id="cfgConnect">연결하기</button>
-    </div>
-    <div class="card center">
-      <p class="muted">아직 준비 안 됐나요?</p>
-      <button class="btn sub" id="cfgDemo">데모 모드로 둘러보기</button>
-    </div>
-  </section>
-
-  <!-- 로그인 -->
-  <section class="screen" id="scr-login">
-    <div class="card center" style="padding:28px 20px;">
-      <div class="eyebrow">DAILY WORD CHALLENGE</div>
-      <div class="big-emoji" style="margin-top:10px;">🙌</div>
-      <h2>로그인</h2>
-      <p class="muted">이름을 선택하고 PIN 4자리를 입력하세요.</p>
-      <p class="muted" style="margin-top:14px; font-size:12.5px; line-height:1.7;">"즐거워하는 자들과 함께 즐거워하고<br>우는 자들과 함께 울라" <b>(롬 12:15)</b><br><span style="font-size:11.5px;">2026 중고등부 표어 · 오고 싶은 중고등부, 머물고 싶은 충무교회</span></p>
-    </div>
-    <div class="card">
-      <div class="tabs"><button id="tabStu" class="on">학생</button><button id="tabAdm">관리자</button><button id="tabSu">회원가입</button></div>
-      <div id="loginStu">
-        <label>이름</label><select id="loginName"></select>
-        <label>PIN 4자리</label><input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
-      </div>
-      <div id="loginAdm" class="hidden">
-        <label>관리자 이름</label><input id="loginAdmName" value="관리자">
-        <label>PIN</label><input id="loginAdmPin" type="password" inputmode="numeric" placeholder="PIN 입력">
-      </div>
-      <div id="loginSignup" class="hidden">
-        <label>이름 (실명)</label><input id="suName" placeholder="예: 김민준" maxlength="12">
-        <label>PIN 4자리 — 직접 정하세요</label><input id="suPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
-        <label>PIN 확인</label><input id="suPin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
-        <p class="muted" style="margin-top:10px;">PIN은 본인만 아는 번호로 정해주세요.<br>다른 친구 이름으로 가입하면 안 돼요 🙅</p>
-      </div>
-      <button class="btn" id="loginBtn">들어가기</button>
-      <button class="btn hidden" id="signupBtn">가입하기</button>
-      <button class="btn sub hidden" id="backToCfg">연결 설정으로 돌아가기</button>
-    </div>
-  </section>
-
-  <!-- 학생 홈 -->
-  <section class="screen" id="scr-home">
-    <div id="demoBanner" class="demo-banner hidden">👀 데모 모드 — 입력한 내용은 이 브라우저에만 저장돼요</div>
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span id="homeAvatar"></span>
-        <div><div id="homeHello" style="font-weight:800;font-size:17px;"></div>
-        <div class="muted" id="homeWeek"></div></div>
-        <div style="margin-left:auto;text-align:right;"><span class="talent-pill">🌾 <span id="homeTalent">0</span></span></div>
-      </div>
-      <div class="dayrow" id="weekProg"></div>
-      <div class="progress"><i id="progBar" style="width:0%"></i></div>
-    </div>
-    <div id="todayBox"></div>
-  </section>
-
-  <!-- 미션 수행 -->
-  <section class="screen" id="scr-mission"><div id="missionBox"></div>
-    <button class="btn sub" onclick="go('scr-home')">← 홈으로</button>
-  </section>
-
-  <!-- 피드 -->
-  <section class="screen" id="scr-feed">
-    <div class="card"><h2>📮 친구들의 나눔</h2><p class="muted">적용 나누기와 인증샷은 4주간 볼 수 있어요.</p><div id="feedList"></div></div>
-  </section>
-
-  <!-- 아바타 -->
-  <section class="screen" id="scr-avatar">
-    <div class="card"><h2>🎭 아바타 꾸미기</h2>
-      <div class="av-preview" id="avPreview"></div>
-      <h3>종류</h3><div class="av-grid" id="avTypes"></div>
-      <h3>색상</h3><div class="swatch-grid" id="avColors"></div>
-      <h3>배경</h3><div class="swatch-grid" id="avBgs"></div>
-      <h3>악세사리</h3><div class="av-grid" id="avAccs" style="grid-template-columns:repeat(4,1fr);"></div>
-      <button class="btn" id="avSave">저장하기</button>
-    </div>
-  </section>
-
-  <!-- 랭킹 -->
-  <section class="screen" id="scr-rank">
-    <div class="card"><h2>🏆 달란트 랭킹</h2><p class="muted" id="rankWeek"></p><div id="rankList"></div></div>
-  </section>
-
-  <!-- 관리자 -->
-  <section class="screen" id="scr-admin">
-    <div class="card"><h2>🛠 관리자</h2>
-      <div class="tabs" style="flex-wrap:wrap;">
-        <button data-atab="students" class="on">학생</button>
-        <button data-atab="week">설교·미션</button>
-        <button data-atab="talents">달란트</button>
-        <button data-atab="settings">설정</button>
-      </div>
-      <div id="atab-students">
-        <h3>학생 등록</h3>
-        <div class="row2"><input id="newStuName" placeholder="이름"><input id="newStuPin" placeholder="PIN 4자리" maxlength="4" inputmode="numeric"></div>
-        <button class="btn" id="addStuBtn">등록하기</button>
-        <h3>학생 명단</h3><div id="stuList"></div>
-      </div>
-      <div id="atab-week" class="hidden">
-        <h3>이번 주 설교 등록</h3>
-        <label>설교 제목</label><input id="wkTitle" placeholder="예: 달란트 비유">
-        <label>주일 날짜</label><input id="wkDate" type="date">
-        <label>설교 원고 (붙여넣기)</label><textarea id="wkSermon" placeholder="설교 원고를 여기에 붙여넣으세요"></textarea>
-        <button class="btn sub" id="copyPromptBtn">📋 미션 생성 프롬프트 복사</button>
-        <p class="muted">복사한 프롬프트를 Muse 채팅에 붙여넣으면 미션팩 JSON을 만들어줘요. 받은 JSON을 아래에 붙여넣으세요.</p>
-        <label>미션팩 JSON</label><textarea id="wkPack" style="min-height:170px;" placeholder='{"week_title":"...","missions":[...]}'></textarea>
-        <div class="row2"><button class="btn sub" id="packPreviewBtn">미리보기</button><button class="btn" id="packSaveBtn">이번 주 미션 열기</button></div>
-        <div id="packPreview"></div>
-      </div>
-      <div id="atab-talents" class="hidden">
-        <h3>🌾 달란트 현황판</h3><p class="muted">주일 오전 확인용 — 이번 주 적립 현황</p><div id="talentBoard"></div>
-      </div>
-      <div id="atab-settings" class="hidden">
-        <h3>🔑 관리자 PIN 변경</h3>
-        <label>현재 PIN</label><input id="admCurPin" type="password" inputmode="numeric" placeholder="현재 PIN 입력">
-        <div class="row2">
-          <div><label>새 PIN 4자리</label><input id="admNewPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
-          <div><label>새 PIN 확인</label><input id="admNewPin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
-        </div>
-        <button class="btn" id="changePinBtn" style="margin-top:12px;">PIN 변경하기</button>
-        <h3>달란트 금액 설정</h3>
-        <div id="talentSettings"></div>
-        <button class="btn" id="saveSettingsBtn">저장</button>
-        <h3>연결</h3>
-        <button class="btn sub" id="cfgResetBtn">Supabase 연결 다시 설정</button>
-      </div>
-    </div>
-  </section>
-
+<!-- 연결 설정 -->
+<section class="screen" id="scr-config">
+<div class="card center" style="padding:38px 20px;">
+<div class="eyebrow">DAILY WORD CHALLENGE</div>
+<h2 style="font-size:32px; margin:12px 0 10px;">복사생 <span class="grad">말씀 챌린지</span></h2>
+<p class="muted">주일 말씀을 월–토 매일 적용하고<br>달란트를 모아가는 중고등부 챌린지</p>
+<p class="muted" style="margin-top:16px; font-size:12.5px; line-height:1.7;">"즐거워하는 자들과 함께 즐거워하고<br>우는 자들과 함께 울라" <b>(롬 12:15)</b><br><span style="font-size:11.5px;">2026 중고등부 표어 · 오고 싶은 중고등부, 머물고 싶은 충무교회</span></p>
 </div>
-
+<div class="card">
+<h2>Supabase 연결</h2>
+<p class="muted">Supabase 프로젝트의 URL과 anon key를 입력하세요. (브라우저에만 저장됩니다)</p>
+<label>Supabase URL</label><input id="cfgUrl" placeholder="https://xxxx.supabase.co">
+<label>Anon Key</label><input id="cfgKey" placeholder="eyJhbGciOi...">
+<button class="btn" id="cfgConnect">연결하기</button>
+</div>
+<div class="card center">
+<p class="muted">아직 준비 안 됐나요?</p>
+<button class="btn sub" id="cfgDemo">데모 모드로 둘러보기</button>
+</div>
+</section>
+<!-- 로그인 -->
+<section class="screen" id="scr-login">
+<div class="card center" style="padding:28px 20px;">
+<div class="eyebrow">DAILY WORD CHALLENGE</div>
+<div class="big-emoji" style="margin-top:10px;">🙌</div>
+<h2>로그인</h2>
+<p class="muted">이름을 선택하고 PIN 4자리를 입력하세요.</p>
+<p class="muted" style="margin-top:14px; font-size:12.5px; line-height:1.7;">"즐거워하는 자들과 함께 즐거워하고<br>우는 자들과 함께 울라" <b>(롬 12:15)</b><br><span style="font-size:11.5px;">2026 중고등부 표어 · 오고 싶은 중고등부, 머물고 싶은 충무교회</span></p>
+</div>
+<div class="card">
+<div class="tabs"><button id="tabStu" class="on">학생</button><button id="tabAdm">관리자</button><button id="tabSu">회원가입</button></div>
+<div id="loginStu">
+<label>이름</label><select id="loginName"></select>
+<label>PIN 4자리</label><input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+</div>
+<div id="loginAdm" class="hidden">
+<label>관리자 이름</label><input id="loginAdmName" value="관리자">
+<label>PIN</label><input id="loginAdmPin" type="password" inputmode="numeric" placeholder="PIN 입력">
+</div>
+<div id="loginSignup" class="hidden">
+<label>이름 (실명)</label><input id="suName" placeholder="예: 김민준" maxlength="12">
+<label>PIN 4자리 — 직접 정하세요</label><input id="suPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+<label>PIN 확인</label><input id="suPin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+<label>아바타 만들기 🎭</label><div id="suAvPicker"></div>
+<p class="muted" style="margin-top:10px;">PIN은 본인만 아는 번호로 정해주세요.<br>다른 친구 이름으로 가입하면 안 돼요 🙅</p>
+</div>
+<button class="btn" id="loginBtn">들어가기</button>
+<button class="btn hidden" id="signupBtn">가입하기</button>
+<button class="btn sub hidden" id="backToCfg">연결 설정으로 돌아가기</button>
+</div>
+</section>
+<!-- 학생 홈 -->
+<section class="screen" id="scr-home">
+<div id="demoBanner" class="demo-banner hidden">👀 데모 모드 — 입력한 내용은 이 브라우저에만 저장돼요</div>
+<div class="card">
+<div style="display:flex;align-items:center;gap:12px;">
+<span id="homeAvatar"></span>
+<div><div id="homeHello" style="font-weight:800;font-size:17px;"></div>
+<div class="muted" id="homeWeek"></div></div>
+<div style="margin-left:auto;text-align:right;"><span class="talent-pill">🌾 <span id="homeTalent">0</span></span></div>
+</div>
+<div class="dayrow" id="weekProg"></div>
+<div class="progress"><i id="progBar" style="width:0%"></i></div>
+</div>
+<div id="todayBox"></div>
+</section>
+<!-- 미션 수행 -->
+<section class="screen" id="scr-mission"><div id="missionBox"></div>
+<button class="btn sub" onclick="go('scr-home')">← 홈으로</button>
+</section>
+<!-- 피드 -->
+<section class="screen" id="scr-feed">
+<div class="card"><h2>📮 친구들의 나눔</h2><p class="muted">적용 나누기와 인증샷은 4주간 볼 수 있어요.</p><div id="feedList"></div></div>
+</section>
+<!-- 아바타 -->
+<section class="screen" id="scr-avatar">
+<div class="card"><h2>🎭 아바타 꾸미기</h2>
+<div id="avPicker"></div>
+<button class="btn" id="avSave">저장하기</button>
+</div>
+</section>
+<!-- 랭킹 -->
+<section class="screen" id="scr-rank">
+<div class="card"><h2>🏆 달란트 랭킹</h2><p class="muted" id="rankWeek"></p><div id="rankList"></div></div>
+</section>
+<!-- 관리자 -->
+<section class="screen" id="scr-admin">
+<div class="card"><h2>🛠 관리자</h2>
+<div class="tabs" style="flex-wrap:wrap;">
+<button data-atab="students" class="on">학생</button>
+<button data-atab="week">설교·미션</button>
+<button data-atab="talents">달란트</button>
+<button data-atab="settings">설정</button>
+</div>
+<div id="atab-students">
+<h3>학생 등록</h3>
+<div class="row2"><input id="newStuName" placeholder="이름"><input id="newStuPin" placeholder="PIN 4자리" maxlength="4" inputmode="numeric"></div>
+<button class="btn" id="addStuBtn">등록하기</button>
+<h3>학생 명단</h3><div id="stuList"></div>
+</div>
+<div id="atab-week" class="hidden">
+<h3>이번 주 설교 등록</h3>
+<label>설교 제목</label><input id="wkTitle" placeholder="예: 달란트 비유">
+<label>주일 날짜</label><input id="wkDate" type="date">
+<label>설교 원고 (붙여넣기)</label><textarea id="wkSermon" placeholder="설교 원고를 여기에 붙여넣으세요"></textarea>
+<button class="btn sub" id="copyPromptBtn">📋 미션 생성 프롬프트 복사</button>
+<p class="muted">복사한 프롬프트를 Muse 채팅에 붙여넣으면 미션팩 JSON을 만들어줘요. 받은 JSON을 아래에 붙여넣으세요.</p>
+<label>미션팩 JSON</label><textarea id="wkPack" style="min-height:170px;" placeholder='{"week_title":"...","missions":[...]}'></textarea>
+<div class="row2"><button class="btn sub" id="packPreviewBtn">미리보기</button><button class="btn" id="packSaveBtn">이번 주 미션 열기</button></div>
+<div id="packPreview"></div>
+</div>
+<div id="atab-talents" class="hidden">
+<h3>🌾 달란트 현황판</h3><p class="muted">주일 오전 확인용 — 이번 주 적립 현황</p><div id="talentBoard"></div>
+</div>
+<div id="atab-settings" class="hidden">
+<h3>🔑 관리자 PIN 변경</h3>
+<label>현재 PIN</label><input id="admCurPin" type="password" inputmode="numeric" placeholder="현재 PIN 입력">
+<div class="row2">
+<div><label>새 PIN 4자리</label><input id="admNewPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+<div><label>새 PIN 확인</label><input id="admNewPin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+</div>
+<button class="btn" id="changePinBtn" style="margin-top:12px;">PIN 변경하기</button>
+<h3>달란트 금액 설정</h3>
+<div id="talentSettings"></div>
+<button class="btn" id="saveSettingsBtn">저장</button>
+<h3>🧪 테스트 모드</h3>
+<label class="check-item"><input type="checkbox" id="testModeChk"> <span>모든 요일 미션 열기 (테스트용)</span></label>
+<p class="muted" style="font-size:12.5px;">켜면 지나간 요일·다가올 요일의 미션도 수행할 수 있어요. 실제 운영 때는 꺼두세요.</p>
+<h3>연결</h3>
+<button class="btn sub" id="cfgResetBtn">Supabase 연결 다시 설정</button>
+</div>
+</div>
+</section>
+</div>
 <nav class="bottom hidden" id="bottomNav"><div class="inner">
-  <button data-go="scr-home" class="on"><span class="ic">🏠</span>홈</button>
-  <button data-go="scr-feed"><span class="ic">📮</span>피드</button>
-  <button data-go="scr-avatar"><span class="ic">🎭</span>아바타</button>
-  <button data-go="scr-rank"><span class="ic">🏆</span>랭킹</button>
-  <button data-go="scr-admin" id="navAdmin" class="hidden"><span class="ic">🛠</span>관리</button>
+<button data-go="scr-home" class="on"><span class="ic">🏠</span>홈</button>
+<button data-go="scr-feed"><span class="ic">📮</span>피드</button>
+<button data-go="scr-avatar"><span class="ic">🎭</span>아바타</button>
+<button data-go="scr-rank"><span class="ic">🏆</span>랭킹</button>
+<button data-go="scr-admin" id="navAdmin" class="hidden"><span class="ic">🛠</span>관리</button>
 </div></nav>
-
 <div class="toast" id="toast"></div>
-
 <script>
 /* ================= 기본 상수 ================= */
 const DAYS=['mon','tue','wed','thu','fri','sat'];
@@ -275,583 +280,688 @@ const AV_COLORS=['#FFE0BD','#F1C27D','#E0AC69','#C68642','#A67C52','#FFB6C1'];
 const AV_BGS=['#FFE8E8','#E8F4FF','#E8FFE8','#FFF4E0','#F0E8FF','#E0F7FA'];
 const AV_ACCS=['none','glasses','hat','ribbon'];
 const AV_ACC_KO={none:'없음',glasses:'안경',hat:'모자',ribbon:'리본'};
-
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function todayDay(){const d=new Date().getDay();return d===0?'sun':DAYS[d-1];}
 function uid(){return 'id-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);}
 function fmtDate(iso){const d=new Date(iso);return (d.getMonth()+1)+'월 '+d.getDate()+'일';}
-
 /* =====================================================
-   ★ 배포 전 설정 (관리자용)
-   공유 링크로 배포하기 전에 아래 따옴표 안에
-   Supabase의 Project URL과 Publishable key를 붙여넣고 저장하세요.
-   (Supabase 대시보드 > Project Settings > API Keys에서 복사)
-   입력하면 학생들은 키 입력 없이 바로 로그인 화면을 봅니다.
-   ===================================================== */
+★ 배포 전 설정 (관리자용)
+공유 링크로 배포하기 전에 아래 따옴표 안에
+Supabase의 Project URL과 Publishable key를 붙여넣고 저장하세요.
+(Supabase 대시보드 > Project Settings > API Keys에서 복사)
+입력하면 학생들은 키 입력 없이 바로 로그인 화면을 봅니다.
+===================================================== */
 const SITE_CONFIG = {
-  url: "https://qydceqlrjdtyalcfgule.supabase.co",
-  key: "sb_publishable_2y3zANxJUNwXQYcjEDzA2g_vc-TjZYm"
+url: "https://qydceqlrjdtyalcfgule.supabase.co",
+key: ""
 };
 function activeCfg(){
-  if(SITE_CONFIG.url && SITE_CONFIG.key) return {url: SITE_CONFIG.url, key: SITE_CONFIG.key};
-  return store.cfg;
+if(SITE_CONFIG.url && SITE_CONFIG.key) return {url: SITE_CONFIG.url, key: SITE_CONFIG.key};
+return store.cfg;
 }
 /* ================= 설정/세션 ================= */
 const store={
-  get cfg(){try{return JSON.parse(localStorage.getItem('mc_cfg')||'null');}catch(e){return null;}},
-  set cfg(v){v?localStorage.setItem('mc_cfg',JSON.stringify(v)):localStorage.removeItem('mc_cfg');},
-  get session(){try{return JSON.parse(localStorage.getItem('mc_session')||'null');}catch(e){return null;}},
-  set session(v){v?localStorage.setItem('mc_session',JSON.stringify(v)):localStorage.removeItem('mc_session');},
-  get settings(){try{return Object.assign({},TALENT_DEF,JSON.parse(localStorage.getItem('mc_settings')||'{}'));}catch(e){return {...TALENT_DEF};}},
-  set settings(v){localStorage.setItem('mc_settings',JSON.stringify(v));}
+get cfg(){try{return JSON.parse(localStorage.getItem('mc_cfg')||'null');}catch(e){return null;}},
+set cfg(v){v?localStorage.setItem('mc_cfg',JSON.stringify(v)):localStorage.removeItem('mc_cfg');},
+get session(){try{return JSON.parse(localStorage.getItem('mc_session')||'null');}catch(e){return null;}},
+set session(v){v?localStorage.setItem('mc_session',JSON.stringify(v)):localStorage.removeItem('mc_session');},
+get testMode(){return localStorage.getItem('mc_testmode')==='1';},
+set testMode(v){v?localStorage.setItem('mc_testmode','1'):localStorage.removeItem('mc_testmode');},
+get settings(){try{return Object.assign({},TALENT_DEF,JSON.parse(localStorage.getItem('mc_settings')||'{}'));}catch(e){return {...TALENT_DEF};}},
+set settings(v){localStorage.setItem('mc_settings',JSON.stringify(v));}
 };
 </script>
-
 <script>
 /* ================= 아바타 SVG ================= */
 function avatarSVG(a){
-  a=Object.assign({type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'},a||{});
-  const c=a.color, bg=a.bg;
-  let ears='';
-  if(a.type==='cat') ears='<path d="M28 34 L22 8 L48 24 Z" fill="'+c+'"/><path d="M92 34 L98 8 L72 24 Z" fill="'+c+'"/><path d="M31 28 L28 14 L42 24 Z" fill="#FFB6C1"/><path d="M89 28 L92 14 L78 24 Z" fill="#FFB6C1"/>';
-  else if(a.type==='dog') ears='<ellipse cx="26" cy="58" rx="10" ry="20" fill="'+c+'" transform="rotate(18 26 58)"/><ellipse cx="94" cy="58" rx="10" ry="20" fill="'+c+'" transform="rotate(-18 94 58)"/>';
-  else if(a.type==='rabbit') ears='<ellipse cx="44" cy="18" rx="9" ry="22" fill="'+c+'"/><ellipse cx="76" cy="18" rx="9" ry="22" fill="'+c+'"/><ellipse cx="44" cy="20" rx="4" ry="13" fill="#FFB6C1"/><ellipse cx="76" cy="20" rx="4" ry="13" fill="#FFB6C1"/>';
-  else if(a.type==='bear') ears='<circle cx="30" cy="34" r="11" fill="'+c+'"/><circle cx="90" cy="34" r="11" fill="'+c+'"/><circle cx="30" cy="34" r="5" fill="#FFB6C1"/><circle cx="90" cy="34" r="5" fill="#FFB6C1"/>';
-  let acc='';
-  if(a.acc==='glasses') acc='<circle cx="46" cy="66" r="11" fill="none" stroke="#3A2E2A" stroke-width="3"/><circle cx="74" cy="66" r="11" fill="none" stroke="#3A2E2A" stroke-width="3"/><line x1="57" y1="66" x2="63" y2="66" stroke="#3A2E2A" stroke-width="3"/>';
-  else if(a.acc==='hat') acc='<path d="M30 44 Q60 4 90 44 Z" fill="#FF6B6B"/><circle cx="60" cy="16" r="7" fill="#fff"/>';
-  else if(a.acc==='ribbon') acc='<g transform="translate(88,40)"><ellipse cx="-8" cy="0" rx="9" ry="6" fill="#FF6B6B" transform="rotate(-24)"/><ellipse cx="8" cy="0" rx="9" ry="6" fill="#FF6B6B" transform="rotate(24)"/><circle r="5" fill="#E85555"/></g>';
-  return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" rx="26" fill="'+bg+'"/>'+ears+'<circle cx="60" cy="68" r="34" fill="'+c+'"/><circle cx="48" cy="66" r="4.5" fill="#3A2E2A"/><circle cx="72" cy="66" r="4.5" fill="#3A2E2A"/><ellipse cx="40" cy="76" rx="6" ry="4" fill="#FFB6C1" opacity=".8"/><ellipse cx="80" cy="76" rx="6" ry="4" fill="#FFB6C1" opacity=".8"/><path d="M54 80 Q60 85 66 80" stroke="#3A2E2A" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+acc+'</svg>';
+a=Object.assign({type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'},a||{});
+const c=a.color, bg=a.bg;
+let ears='';
+if(a.type==='cat') ears='<path d="M28 34 L22 8 L48 24 Z" fill="'+c+'"/><path d="M92 34 L98 8 L72 24 Z" fill="'+c+'"/><path d="M31 28 L28 14 L42 24 Z" fill="#FFB6C1"/><path d="M89 28 L92 14 L78 24 Z" fill="#FFB6C1"/>';
+else if(a.type==='dog') ears='<ellipse cx="26" cy="58" rx="10" ry="20" fill="'+c+'" transform="rotate(18 26 58)"/><ellipse cx="94" cy="58" rx="10" ry="20" fill="'+c+'" transform="rotate(-18 94 58)"/>';
+else if(a.type==='rabbit') ears='<ellipse cx="44" cy="18" rx="9" ry="22" fill="'+c+'"/><ellipse cx="76" cy="18" rx="9" ry="22" fill="'+c+'"/><ellipse cx="44" cy="20" rx="4" ry="13" fill="#FFB6C1"/><ellipse cx="76" cy="20" rx="4" ry="13" fill="#FFB6C1"/>';
+else if(a.type==='bear') ears='<circle cx="30" cy="34" r="11" fill="'+c+'"/><circle cx="90" cy="34" r="11" fill="'+c+'"/><circle cx="30" cy="34" r="5" fill="#FFB6C1"/><circle cx="90" cy="34" r="5" fill="#FFB6C1"/>';
+let acc='';
+if(a.acc==='glasses') acc='<circle cx="46" cy="66" r="11" fill="none" stroke="#3A2E2A" stroke-width="3"/><circle cx="74" cy="66" r="11" fill="none" stroke="#3A2E2A" stroke-width="3"/><line x1="57" y1="66" x2="63" y2="66" stroke="#3A2E2A" stroke-width="3"/>';
+else if(a.acc==='hat') acc='<path d="M30 44 Q60 4 90 44 Z" fill="#FF6B6B"/><circle cx="60" cy="16" r="7" fill="#fff"/>';
+else if(a.acc==='ribbon') acc='<g transform="translate(88,40)"><ellipse cx="-8" cy="0" rx="9" ry="6" fill="#FF6B6B" transform="rotate(-24)"/><ellipse cx="8" cy="0" rx="9" ry="6" fill="#FF6B6B" transform="rotate(24)"/><circle r="5" fill="#E85555"/></g>';
+return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" rx="26" fill="'+bg+'"/>'+ears+'<circle cx="60" cy="68" r="34" fill="'+c+'"/><circle cx="48" cy="66" r="4.5" fill="#3A2E2A"/><circle cx="72" cy="66" r="4.5" fill="#3A2E2A"/><ellipse cx="40" cy="76" rx="6" ry="4" fill="#FFB6C1" opacity=".8"/><ellipse cx="80" cy="76" rx="6" ry="4" fill="#FFB6C1" opacity=".8"/><path d="M54 80 Q60 85 66 80" stroke="#3A2E2A" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+acc+'</svg>';
 }
-
 /* ================= 데모 DB (localStorage) ================= */
 const demoDB={
-  key:'mc_demo_v1',
-  load(){try{return JSON.parse(localStorage.getItem(this.key))||null;}catch(e){return null;}},
-  save(d){localStorage.setItem(this.key,JSON.stringify(d));},
-  seed(){
-    const d={profiles:[
-      {id:'demo-admin',name:'관리자',role:'admin',pin:'1234',avatar:{type:'person',color:'#F1C27D',bg:'#E8F4FF',acc:'glasses'}},
-      {id:'demo-s1',name:'민지',role:'student',pin:'1111',avatar:{type:'cat',color:'#FFB6C1',bg:'#FFE8E8',acc:'ribbon'}},
-      {id:'demo-s2',name:'준혁',role:'student',pin:'2222',avatar:{type:'dog',color:'#E0AC69',bg:'#E8FFE8',acc:'none'}},
-      {id:'demo-s3',name:'서연',role:'student',pin:'3333',avatar:{type:'rabbit',color:'#FFE0BD',bg:'#F0E8FF',acc:'hat'}}
-    ],weeks:[],submissions:[],ledger:[]};
-    const pack={week_title:'씨앗 비유',missions:[
-      {day:'mon',type:'quiz',title:'말씀 퀴즈',talents:10,data:{question:'씨앗 비유에서 "좋은 땅"에 떨어진 씨는 무엇을 의미할까요?',choices:['말씀을 듣고 깨달아 열매 맺는 사람','박해 때문에 넘어지는 사람','걱정 때문에 열매 못 맺는 사람'],answer:0,explain:'좋은 땅은 말씀을 듣고 깨달아 백 배, 육십 배, 삼십 배의 열매를 맺는 사람입니다. (마 13:23)'}},
-      {day:'tue',type:'application',title:'나만의 적용 나누기',talents:15,data:{prompt:'오늘 내 마음의 밭은 어떤 상태인가요? 돌밭? 가시밭? 좋은 땅? 솔직하게 나눠보세요.'}},
-      {day:'wed',type:'action',title:'실천 챌린지',talents:10,data:{tasks:['아침에 일어나 감사 기도 1분 하기','친구에게 따뜻한 말 한마디 건네기','오늘 읽은 성경 구절 1개 메모하기']}},
-      {day:'thu',type:'photo',title:'인증샷 챌린지',talents:20,data:{prompt:'말씀을 실천하는 모습, 또는 오늘의 묵상 노트를 사진으로 찍어 올려보세요!'}},
-      {day:'fri',type:'worship',title:'찬양 듣기',talents:5,data:{title:'주 품에',artist:'-',youtube:'https://www.youtube.com/results?search_query=주+품에+찬양'}},
-      {day:'sat',type:'application',title:'한 주 돌아보기',talents:15,data:{prompt:'이번 주 챌린지 중 가장 기억에 남는 실천과 그 이유를 나눠보세요.'}}
-    ]};
-    d.weeks.push({id:'demo-week1',title:'씨앗 비유',sunday_date:new Date().toISOString().slice(0,10),sermon_text:'(데모용 설교)',mission_pack:pack,is_active:true,created_at:new Date().toISOString()});
-    this.save(d); return d;
-  },
-  get(){return this.load()||this.seed();}
+key:'mc_demo_v1',
+load(){try{return JSON.parse(localStorage.getItem(this.key))||null;}catch(e){return null;}},
+save(d){localStorage.setItem(this.key,JSON.stringify(d));},
+seed(){
+const d={profiles:[
+{id:'demo-admin',name:'관리자',role:'admin',pin:'1234',avatar:{type:'person',color:'#F1C27D',bg:'#E8F4FF',acc:'glasses'}},
+{id:'demo-s1',name:'민지',role:'student',pin:'1111',avatar:{type:'cat',color:'#FFB6C1',bg:'#FFE8E8',acc:'ribbon'}},
+{id:'demo-s2',name:'준혁',role:'student',pin:'2222',avatar:{type:'dog',color:'#E0AC69',bg:'#E8FFE8',acc:'none'}},
+{id:'demo-s3',name:'서연',role:'student',pin:'3333',avatar:{type:'rabbit',color:'#FFE0BD',bg:'#F0E8FF',acc:'hat'}}
+],weeks:[],submissions:[],ledger:[],comments:[]};
+const pack={week_title:'씨앗 비유',missions:[
+{day:'mon',type:'quiz',title:'말씀 퀴즈',talents:10,data:{question:'씨앗 비유에서 "좋은 땅"에 떨어진 씨는 무엇을 의미할까요?',choices:['말씀을 듣고 깨달아 열매 맺는 사람','박해 때문에 넘어지는 사람','걱정 때문에 열매 못 맺는 사람'],answer:0,explain:'좋은 땅은 말씀을 듣고 깨달아 백 배, 육십 배, 삼십 배의 열매를 맺는 사람입니다. (마 13:23)'}},
+{day:'tue',type:'application',title:'나만의 적용 나누기',talents:15,data:{prompt:'오늘 내 마음의 밭은 어떤 상태인가요? 돌밭? 가시밭? 좋은 땅? 솔직하게 나눠보세요.'}},
+{day:'wed',type:'action',title:'실천 챌린지',talents:10,data:{tasks:['아침에 일어나 감사 기도 1분 하기','친구에게 따뜻한 말 한마디 건네기','오늘 읽은 성경 구절 1개 메모하기']}},
+{day:'thu',type:'photo',title:'인증샷 챌린지',talents:20,data:{prompt:'말씀을 실천하는 모습, 또는 오늘의 묵상 노트를 사진으로 찍어 올려보세요!'}},
+{day:'fri',type:'worship',title:'찬양 듣기',talents:5,data:{title:'주 품에',artist:'-',youtube:'https://www.youtube.com/results?search_query=주+품에+찬양'}},
+{day:'sat',type:'application',title:'한 주 돌아보기',talents:15,data:{prompt:'이번 주 챌린지 중 가장 기억에 남는 실천과 그 이유를 나눠보세요.'}}
+]};
+d.weeks.push({id:'demo-week1',title:'씨앗 비유',sunday_date:new Date().toISOString().slice(0,10),sermon_text:'(데모용 설교)',mission_pack:pack,is_active:true,created_at:new Date().toISOString()});
+this.save(d); return d;
+},
+get(){return this.load()||this.seed();}
 };
-
 /* ================= DB 추상화 ================= */
 let sb=null; // supabase client
 /* CDN 로드 실패 시 대체 CDN으로 재시도 */
 function loadSupabase(){
-  return new Promise((resolve)=>{
-    if(window.supabase) return resolve(true);
-    const urls=[
-      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
-      'https://unpkg.com/@supabase/supabase-js@2'
-    ];
-    let i=0;
-    const next=()=>{
-      if(i>=urls.length) return resolve(false);
-      const s=document.createElement('script');
-      s.src=urls[i++];
-      s.onload=()=>resolve(!!window.supabase);
-      s.onerror=next;
-      document.head.appendChild(s);
-    };
-    next();
-  });
+return new Promise((resolve)=>{
+if(window.supabase) return resolve(true);
+const urls=[
+'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+'https://unpkg.com/@supabase/supabase-js@2'
+];
+let i=0;
+const next=()=>{
+if(i>=urls.length) return resolve(false);
+const s=document.createElement('script');
+s.src=urls[i++];
+s.onload=()=>resolve(!!window.supabase);
+s.onerror=next;
+document.head.appendChild(s);
+};
+next();
+});
 }
 const DB={
-  mode:'demo',
-  async init(){
-    sb=null; this.mode='demo';
-    const cfg=activeCfg();
-    if(cfg&&cfg.url&&cfg.key&&(await loadSupabase())){
-      try{sb=window.supabase.createClient(cfg.url,cfg.key);this.mode='supabase';}
-      catch(e){sb=null;}
-    }
-  },
-  /* 로그인 */
-  async login(name,pin,isAdmin){
-    if(this.mode==='supabase'){
-      const {data,error}=await sb.rpc('login',{p_name:name,p_pin:pin});
-      if(error||!data||!data.length) return null;
-      const u=data[0];
-      if(isAdmin&&u.role!=='admin') return null;
-      if(!isAdmin&&u.role!=='student') return null;
-      return {id:u.id,name:u.name,role:u.role,avatar:u.avatar||{}};
-    }
-    const d=demoDB.get();
-    const u=d.profiles.find(p=>p.name===name&&String(p.pin)===String(pin));
-    if(!u) return null;
-    if(isAdmin&&u.role!=='admin') return null;
-    if(!isAdmin&&u.role!=='student') return null;
-    return {id:u.id,name:u.name,role:u.role,avatar:u.avatar||{}};
-  },
-  async getProfiles(){
-    if(this.mode==='supabase'){const {data}=await sb.from('public_profiles').select('*').order('created_at');return data||[];}
-    return demoDB.get().profiles.map(p=>({id:p.id,name:p.name,role:p.role,avatar:p.avatar,created_at:''}));
-  },
-  async createStudent(actorId,name,pin){
-    if(this.mode==='supabase'){const {error}=await sb.rpc('admin_create_student',{p_actor_id:actorId,p_name:name,p_pin:pin});if(error) throw error;}
-    else{const d=demoDB.get();if(d.profiles.some(p=>p.name===name)) throw new Error('이미 있는 이름입니다');d.profiles.push({id:uid(),name,role:'student',pin,avatar:{}});demoDB.save(d);}
-  },
-  /* 학생 자가 회원가입 */
-  async studentSignup(name,pin){
-    if(this.mode==='supabase'){const {error}=await sb.rpc('student_signup',{p_name:name,p_pin:pin});if(error) throw error;}
-    else{const d=demoDB.get();if(d.profiles.some(p=>p.name===name)) throw new Error('이미 등록된 이름이에요');d.profiles.push({id:uid(),name,role:'student',pin,avatar:{type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'}});demoDB.save(d);}
-  },
-  /* 관리자 PIN 변경 */
-  async changeAdminPin(actorId,curPin,newPin){
-    if(this.mode==='supabase'){const {data,error}=await sb.rpc('admin_change_pin',{p_actor_id:actorId,p_cur_pin:curPin,p_new_pin:newPin});if(error) throw error;if(!data) throw new Error('현재 PIN이 맞지 않아요');}
-    else{const d=demoDB.get();const a=d.profiles.find(p=>p.id===actorId&&p.role==='admin');if(!a||String(a.pin)!==String(curPin)) throw new Error('현재 PIN이 맞지 않아요');a.pin=newPin;demoDB.save(d);}
-  },
-  /* 학생 삭제 (관리자) */
-  async deleteStudent(actorId,studentId){
-    if(this.mode==='supabase'){const {error}=await sb.rpc('admin_delete_student',{p_actor_id:actorId,p_student_id:studentId});if(error) throw error;}
-    else{const d=demoDB.get();d.profiles=d.profiles.filter(p=>p.id!==studentId);d.submissions=d.submissions.filter(s=>s.student_id!==studentId);d.ledger=d.ledger.filter(l=>l.student_id!==studentId);demoDB.save(d);}
-  },
-  async getActiveWeek(){
-    if(this.mode==='supabase'){const {data}=await sb.from('weeks').select('*').eq('is_active',true).order('created_at',{ascending:false}).limit(1);return (data&&data[0])||null;}
-    const w=demoDB.get().weeks.filter(w=>w.is_active);return w[w.length-1]||null;
-  },
-  async createWeek(actorId,title,sunday,sermon,pack){
-    if(this.mode==='supabase'){const {error}=await sb.rpc('admin_create_week',{p_actor_id:actorId,p_title:title,p_sunday:sunday,p_sermon:sermon,p_pack:pack});if(error) throw error;}
-    else{const d=demoDB.get();d.weeks.forEach(w=>w.is_active=false);d.weeks.push({id:uid(),title,sunday_date:sunday,sermon_text:sermon,mission_pack:pack,is_active:true,created_at:new Date().toISOString()});demoDB.save(d);}
-  },
-  async getSubmissions(weekId){
-    if(this.mode==='supabase'){const {data}=await sb.from('submissions').select('*').eq('week_id',weekId).order('created_at',{ascending:false});return data||[];}
-    return demoDB.get().submissions.filter(s=>s.week_id===weekId).sort((a,b)=>b.created_at.localeCompare(a.created_at));
-  },
-  async submit(studentId,weekId,day,type,content,photoUrl,talents){
-    if(this.mode==='supabase'){const {error}=await sb.rpc('submit_mission',{p_student_id:studentId,p_week_id:weekId,p_day:day,p_type:type,p_content:content,p_photo:photoUrl,p_talents:talents});if(error) throw error;}
-    else{const d=demoDB.get();if(d.submissions.some(s=>s.week_id===weekId&&s.student_id===studentId&&s.day===day&&s.mission_type===type)) throw new Error('already submitted');
-      d.submissions.push({id:uid(),week_id:weekId,student_id:studentId,day,mission_type:type,content,photo_url:photoUrl,talents,created_at:new Date().toISOString()});
-      d.ledger.push({id:uid(),student_id:studentId,week_id:weekId,amount:talents,reason:day+' '+type,created_at:new Date().toISOString()});demoDB.save(d);}
-  },
-  async awardBonus(studentId,weekId,amount){
-    if(this.mode==='supabase'){await sb.from('talent_ledger').insert({student_id:studentId,week_id:weekId,amount,reason:'weekly bonus'});}
-    else{const d=demoDB.get();d.ledger.push({id:uid(),student_id:studentId,week_id:weekId,amount,reason:'weekly bonus',created_at:new Date().toISOString()});demoDB.save(d);}
-  },
-  async hasBonus(studentId,weekId){
-    if(this.mode==='supabase'){const {data}=await sb.from('talent_ledger').select('id').eq('student_id',studentId).eq('week_id',weekId).eq('reason','weekly bonus').limit(1);return !!(data&&data.length);}
-    return demoDB.get().ledger.some(l=>l.student_id===studentId&&l.week_id===weekId&&l.reason==='weekly bonus');
-  },
-  async myTalents(studentId,weekId){
-    const subs=await this.getSubmissions(weekId);
-    return subs.filter(s=>s.student_id===studentId).reduce((a,s)=>a+(s.talents||0),0);
-  },
-  async weeklyBoard(weekId){
-    if(this.mode==='supabase'){const {data}=await sb.from('weekly_talents').select('*').eq('week_id',weekId).order('talents',{ascending:false});return data||[];}
-    const d=demoDB.get();const map={};
-    d.submissions.filter(s=>s.week_id===weekId).forEach(s=>{map[s.student_id]=map[s.student_id]||{student_id:s.student_id,mission_count:0,talents:0};map[s.student_id].mission_count++;map[s.student_id].talents+=s.talents||0;});
-    return Object.values(map).map(r=>{const p=d.profiles.find(x=>x.id===r.student_id);return {...r,name:p?p.name:'?',avatar:p?p.avatar:{}};}).sort((a,b)=>b.talents-a.talents);
-  },
-  async saveAvatar(studentId,avatar){
-    if(this.mode==='supabase'){const {error}=await sb.rpc('save_avatar',{p_student_id:studentId,p_avatar:avatar});if(error) throw error;}
-    else{const d=demoDB.get();const p=d.profiles.find(x=>x.id===studentId);if(p)p.avatar=avatar;demoDB.save(d);}
-  },
-  async uploadPhoto(studentId,file){
-    if(this.mode==='supabase'){
-      const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
-      const path=studentId+'/'+Date.now()+'.'+ext;
-      const {error}=await sb.storage.from('photos').upload(path,file);
-      if(error) throw error;
-      return sb.storage.from('photos').getPublicUrl(path).data.publicUrl;
-    }
-    return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
-  }
+mode:'demo',
+async init(){
+sb=null; this.mode='demo';
+const cfg=activeCfg();
+if(cfg&&cfg.url&&cfg.key&&(await loadSupabase())){
+try{sb=window.supabase.createClient(cfg.url,cfg.key);this.mode='supabase';}
+catch(e){sb=null;}
+}
+},
+/* 로그인 */
+async login(name,pin,isAdmin){
+if(this.mode==='supabase'){
+const {data,error}=await sb.rpc('login',{p_name:name,p_pin:pin});
+if(error||!data||!data.length) return null;
+const u=data[0];
+if(isAdmin&&u.role!=='admin') return null;
+if(!isAdmin&&u.role!=='student') return null;
+return {id:u.id,name:u.name,role:u.role,avatar:u.avatar||{}};
+}
+const d=demoDB.get();
+const u=d.profiles.find(p=>p.name===name&&String(p.pin)===String(pin));
+if(!u) return null;
+if(isAdmin&&u.role!=='admin') return null;
+if(!isAdmin&&u.role!=='student') return null;
+return {id:u.id,name:u.name,role:u.role,avatar:u.avatar||{}};
+},
+async getProfiles(){
+if(this.mode==='supabase'){const {data}=await sb.from('public_profiles').select('*').order('created_at');return data||[];}
+return demoDB.get().profiles.map(p=>({id:p.id,name:p.name,role:p.role,avatar:p.avatar,created_at:''}));
+},
+async createStudent(actorId,name,pin){
+if(this.mode==='supabase'){const {error}=await sb.rpc('admin_create_student',{p_actor_id:actorId,p_name:name,p_pin:pin});if(error) throw error;}
+else{const d=demoDB.get();if(d.profiles.some(p=>p.name===name)) throw new Error('이미 있는 이름입니다');d.profiles.push({id:uid(),name,role:'student',pin,avatar:{}});demoDB.save(d);}
+},
+/* 학생 자가 회원가입 */
+async studentSignup(name,pin){
+if(this.mode==='supabase'){const {data,error}=await sb.rpc('student_signup',{p_name:name,p_pin:pin});if(error) throw error;return data;}
+else{const d=demoDB.get();if(d.profiles.some(p=>p.name===name)) throw new Error('이미 등록된 이름이에요');const nid=uid();d.profiles.push({id:nid,name,role:'student',pin,avatar:{type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'}});demoDB.save(d);return nid;}
+},
+/* 관리자 PIN 변경 */
+async changeAdminPin(actorId,curPin,newPin){
+if(this.mode==='supabase'){const {data,error}=await sb.rpc('admin_change_pin',{p_actor_id:actorId,p_cur_pin:curPin,p_new_pin:newPin});if(error) throw error;if(!data) throw new Error('현재 PIN이 맞지 않아요');}
+else{const d=demoDB.get();const a=d.profiles.find(p=>p.id===actorId&&p.role==='admin');if(!a||String(a.pin)!==String(curPin)) throw new Error('현재 PIN이 맞지 않아요');a.pin=newPin;demoDB.save(d);}
+},
+/* 학생 삭제 (관리자) */
+async deleteStudent(actorId,studentId){
+if(this.mode==='supabase'){const {error}=await sb.rpc('admin_delete_student',{p_actor_id:actorId,p_student_id:studentId});if(error) throw error;}
+else{const d=demoDB.get();d.profiles=d.profiles.filter(p=>p.id!==studentId);d.submissions=d.submissions.filter(s=>s.student_id!==studentId);d.ledger=d.ledger.filter(l=>l.student_id!==studentId);demoDB.save(d);}
+},
+async getActiveWeek(){
+if(this.mode==='supabase'){const {data}=await sb.from('weeks').select('*').eq('is_active',true).order('created_at',{ascending:false}).limit(1);return (data&&data[0])||null;}
+const w=demoDB.get().weeks.filter(w=>w.is_active);return w[w.length-1]||null;
+},
+async createWeek(actorId,title,sunday,sermon,pack){
+if(this.mode==='supabase'){const {error}=await sb.rpc('admin_create_week',{p_actor_id:actorId,p_title:title,p_sunday:sunday,p_sermon:sermon,p_pack:pack});if(error) throw error;}
+else{const d=demoDB.get();d.weeks.forEach(w=>w.is_active=false);d.weeks.push({id:uid(),title,sunday_date:sunday,sermon_text:sermon,mission_pack:pack,is_active:true,created_at:new Date().toISOString()});demoDB.save(d);}
+},
+async getSubmissions(weekId){
+if(this.mode==='supabase'){const {data}=await sb.from('submissions').select('*').eq('week_id',weekId).order('created_at',{ascending:false});return data||[];}
+return demoDB.get().submissions.filter(s=>s.week_id===weekId).sort((a,b)=>b.created_at.localeCompare(a.created_at));
+},
+async getComments(submissionId){
+if(this.mode==='supabase'){const {data}=await sb.from('comments').select('*').eq('submission_id',submissionId).order('created_at',{ascending:true});return data||[];}
+const dc=demoDB.get().comments||[];return dc.filter(c=>c.submission_id===submissionId).sort((a,b)=>a.created_at.localeCompare(b.created_at));
+},
+async getCommentsFor(subIds){
+if(!subIds.length) return [];
+if(this.mode==='supabase'){const {data}=await sb.from('comments').select('*').in('submission_id',subIds).order('created_at',{ascending:true});return data||[];}
+const dc2=demoDB.get().comments||[];return dc2.filter(c=>subIds.includes(c.submission_id)).sort((a,b)=>a.created_at.localeCompare(b.created_at));
+},
+async addComment(submissionId,studentId,authorName,text){
+if(this.mode==='supabase'){const {error}=await sb.rpc('add_comment',{p_submission_id:submissionId,p_student_id:studentId,p_author_name:authorName,p_text:text});if(error) throw error;}
+else{const d=demoDB.get();d.comments=d.comments||[];d.comments.push({id:uid(),submission_id:submissionId,student_id:studentId,author_name:authorName||'익명',text:text.trim(),created_at:new Date().toISOString()});demoDB.save(d);}
+},
+async submit(studentId,weekId,day,type,content,photoUrl,talents){
+if(this.mode==='supabase'){const {error}=await sb.rpc('submit_mission',{p_student_id:studentId,p_week_id:weekId,p_day:day,p_type:type,p_content:content,p_photo:photoUrl,p_talents:talents});if(error) throw error;}
+else{const d=demoDB.get();if(d.submissions.some(s=>s.week_id===weekId&&s.student_id===studentId&&s.day===day&&s.mission_type===type)) throw new Error('already submitted');
+d.submissions.push({id:uid(),week_id:weekId,student_id:studentId,day,mission_type:type,content,photo_url:photoUrl,talents,created_at:new Date().toISOString()});
+d.ledger.push({id:uid(),student_id:studentId,week_id:weekId,amount:talents,reason:day+' '+type,created_at:new Date().toISOString()});demoDB.save(d);}
+},
+async awardBonus(studentId,weekId,amount){
+if(this.mode==='supabase'){await sb.from('talent_ledger').insert({student_id:studentId,week_id:weekId,amount,reason:'weekly bonus'});}
+else{const d=demoDB.get();d.ledger.push({id:uid(),student_id:studentId,week_id:weekId,amount,reason:'weekly bonus',created_at:new Date().toISOString()});demoDB.save(d);}
+},
+async hasBonus(studentId,weekId){
+if(this.mode==='supabase'){const {data}=await sb.from('talent_ledger').select('id').eq('student_id',studentId).eq('week_id',weekId).eq('reason','weekly bonus').limit(1);return !!(data&&data.length);}
+return demoDB.get().ledger.some(l=>l.student_id===studentId&&l.week_id===weekId&&l.reason==='weekly bonus');
+},
+async myTalents(studentId,weekId){
+const subs=await this.getSubmissions(weekId);
+return subs.filter(s=>s.student_id===studentId).reduce((a,s)=>a+(s.talents||0),0);
+},
+async weeklyBoard(weekId){
+if(this.mode==='supabase'){const {data}=await sb.from('weekly_talents').select('*').eq('week_id',weekId).order('talents',{ascending:false});return data||[];}
+const d=demoDB.get();const map={};
+d.submissions.filter(s=>s.week_id===weekId).forEach(s=>{map[s.student_id]=map[s.student_id]||{student_id:s.student_id,mission_count:0,talents:0};map[s.student_id].mission_count++;map[s.student_id].talents+=s.talents||0;});
+return Object.values(map).map(r=>{const p=d.profiles.find(x=>x.id===r.student_id);return {...r,name:p?p.name:'?',avatar:p?p.avatar:{}};}).sort((a,b)=>b.talents-a.talents);
+},
+async saveAvatar(studentId,avatar){
+if(this.mode==='supabase'){const {error}=await sb.rpc('save_avatar',{p_student_id:studentId,p_avatar:avatar});if(error) throw error;}
+else{const d=demoDB.get();const p=d.profiles.find(x=>x.id===studentId);if(p)p.avatar=avatar;demoDB.save(d);}
+},
+async uploadPhoto(studentId,file){
+if(this.mode==='supabase'){
+const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+const path=studentId+'/'+Date.now()+'.'+ext;
+const {error}=await sb.storage.from('photos').upload(path,file);
+if(error) throw error;
+return sb.storage.from('photos').getPublicUrl(path).data.publicUrl;
+}
+return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+}
 };
 </script>
-
 <script>
 /* ================= 화면 전환 ================= */
 let session=null, activeWeek=null, mySubs=[];
 function go(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
-  $(id).classList.add('on');
-  document.querySelectorAll('nav.bottom button[data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===id));
-  window.scrollTo(0,0);
-  if(id==='scr-home') renderHome();
-  if(id==='scr-feed') renderFeed();
-  if(id==='scr-rank') renderRank();
-  if(id==='scr-avatar') renderAvatarEditor();
-  if(id==='scr-admin') renderAdmin();
+document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+$(id).classList.add('on');
+document.querySelectorAll('nav.bottom button[data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===id));
+window.scrollTo(0,0);
+if(id==='scr-home') renderHome();
+if(id==='scr-feed') renderFeed();
+if(id==='scr-rank') renderRank();
+if(id==='scr-avatar') renderAvatarEditor();
+if(id==='scr-admin') renderAdmin();
 }
 document.querySelectorAll('nav.bottom button[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 $('logoutBtn').addEventListener('click',()=>{store.session=null;session=null;location.reload();});
-
 /* ================= 연결 설정 ================= */
 $('cfgConnect').addEventListener('click',async()=>{
-  const url=$('cfgUrl').value.trim(), key=$('cfgKey').value.trim();
-  if(!url||!key){toast('URL과 Key를 모두 입력하세요');return;}
-  const btn=$('cfgConnect'); btn.disabled=true; btn.textContent='연결 중...';
-  try{
-    if(!(await loadSupabase())) throw new Error('Supabase 라이브러리를 불러오지 못했어요. 크롬 브라우저에서 파일을 직접 열어주세요.');
-    const client=window.supabase.createClient(url,key);
-    const {error}=await client.from('weeks').select('id').limit(1);
-    if(error){
-      const m=(error.message||'')+error.code;
-      if(/apikey|unauthorized|401|invalid/i.test(m)) throw new Error('URL 또는 키가 올바르지 않아요. 다시 확인해주세요.');
-      throw new Error(error.message);
-    }
-    store.cfg={url,key}; sb=client; DB.mode='supabase';
-    toast('연결됐어요!'); enterLogin();
-  }catch(e){ toast('연결 실패: '+e.message); }
-  btn.disabled=false; btn.textContent='연결하기';
+const url=$('cfgUrl').value.trim(), key=$('cfgKey').value.trim();
+if(!url||!key){toast('URL과 Key를 모두 입력하세요');return;}
+const btn=$('cfgConnect'); btn.disabled=true; btn.textContent='연결 중...';
+try{
+if(!(await loadSupabase())) throw new Error('Supabase 라이브러리를 불러오지 못했어요. 크롬 브라우저에서 파일을 직접 열어주세요.');
+const client=window.supabase.createClient(url,key);
+const {error}=await client.from('weeks').select('id').limit(1);
+if(error){
+const m=(error.message||'')+error.code;
+if(/apikey|unauthorized|401|invalid/i.test(m)) throw new Error('URL 또는 키가 올바르지 않아요. 다시 확인해주세요.');
+throw new Error(error.message);
+}
+store.cfg={url,key}; sb=client; DB.mode='supabase';
+toast('연결됐어요!'); enterLogin();
+}catch(e){ toast('연결 실패: '+e.message); }
+btn.disabled=false; btn.textContent='연결하기';
 });
 $('cfgDemo').addEventListener('click',async()=>{store.cfg=null;await DB.init();enterLogin();});
 $('backToCfg').addEventListener('click',()=>go('scr-config'));
-
 /* ================= 로그인 ================= */
 let loginTab='stu'; // stu | adm | signup
+let suAvDraft={type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'};
 function setLoginTab(t){
-  loginTab=t;
-  $('tabStu').classList.toggle('on',t==='stu');
-  $('tabAdm').classList.toggle('on',t==='adm');
-  $('tabSu').classList.toggle('on',t==='signup');
-  $('loginStu').classList.toggle('hidden',t!=='stu');
-  $('loginAdm').classList.toggle('hidden',t!=='adm');
-  $('loginSignup').classList.toggle('hidden',t!=='signup');
-  $('loginBtn').classList.toggle('hidden',t==='signup');
-  $('signupBtn').classList.toggle('hidden',t!=='signup');
+loginTab=t;
+if(t==='signup'&&$('suAvPicker')){ $('suAvPicker').innerHTML=avatarPickerHTML('su'); bindAvatarPicker('su',()=>suAvDraft,v=>{suAvDraft=v;}); }
+$('tabStu').classList.toggle('on',t==='stu');
+$('tabAdm').classList.toggle('on',t==='adm');
+$('tabSu').classList.toggle('on',t==='signup');
+$('loginStu').classList.toggle('hidden',t!=='stu');
+$('loginAdm').classList.toggle('hidden',t!=='adm');
+$('loginSignup').classList.toggle('hidden',t!=='signup');
+$('loginBtn').classList.toggle('hidden',t==='signup');
+$('signupBtn').classList.toggle('hidden',t!=='signup');
 }
 $('tabStu').addEventListener('click',()=>setLoginTab('stu'));
 $('tabAdm').addEventListener('click',()=>setLoginTab('adm'));
 $('tabSu').addEventListener('click',()=>setLoginTab('signup'));
 async function enterLogin(){
-  const names=await DB.getProfiles();
-  const stu=names.filter(p=>p.role==='student');
-  $('loginName').innerHTML=stu.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>').join('')||'<option value="">(등록된 학생 없음)</option>';
-  $('backToCfg').classList.toggle('hidden',!!activeCfg());
-  go('scr-login');
+const names=await DB.getProfiles();
+const stu=names.filter(p=>p.role==='student');
+$('loginName').innerHTML=stu.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>').join('')||'<option value="">(등록된 학생 없음)</option>';
+$('backToCfg').classList.toggle('hidden',!!activeCfg());
+go('scr-login');
 }
 $('loginBtn').addEventListener('click',async()=>{
-  const isAdm=loginTab==='adm';
-  const name=isAdm?$('loginAdmName').value.trim():$('loginName').value;
-  const pin=isAdm?$('loginAdmPin').value.trim():$('loginPin').value.trim();
-  if(!name||!pin){toast('이름과 PIN을 입력하세요');return;}
-  const u=await DB.login(name,pin,isAdm);
-  if(!u){toast('이름 또는 PIN이 틀렸어요');return;}
-  session=u; store.session=u;
-  $('meBox').classList.remove('hidden'); $('meName').textContent=u.name+(u.role==='admin'?' (관리자)':'');
-  $('meAvatar').innerHTML=avatarSVG(u.avatar);
-  $('bottomNav').classList.remove('hidden');
-  $('navAdmin').classList.toggle('hidden',u.role!=='admin');
-  $('demoBanner').classList.toggle('hidden',DB.mode!=='demo');
-  toast('환영해요, '+u.name+'님! ✦');
-  go(u.role==='admin'?'scr-admin':'scr-home');
+const isAdm=loginTab==='adm';
+const name=isAdm?$('loginAdmName').value.trim():$('loginName').value;
+const pin=isAdm?$('loginAdmPin').value.trim():$('loginPin').value.trim();
+if(!name||!pin){toast('이름과 PIN을 입력하세요');return;}
+const u=await DB.login(name,pin,isAdm);
+if(!u){toast('이름 또는 PIN이 틀렸어요');return;}
+session=u; store.session=u;
+$('meBox').classList.remove('hidden'); $('meName').textContent=u.name+(u.role==='admin'?' (관리자)':'');
+$('meAvatar').innerHTML=avatarSVG(u.avatar);
+$('bottomNav').classList.remove('hidden');
+$('navAdmin').classList.toggle('hidden',u.role!=='admin');
+$('demoBanner').classList.toggle('hidden',DB.mode!=='demo');
+toast('환영해요, '+u.name+'님! ✦');
+go(u.role==='admin'?'scr-admin':'scr-home');
 });
 $('signupBtn').addEventListener('click',async()=>{
-  const name=$('suName').value.trim();
-  const p1=$('suPin').value.trim(), p2=$('suPin2').value.trim();
-  if(name.length<1){toast('이름을 입력하세요');return;}
-  if(!/^\d{4}$/.test(p1)){toast('PIN은 숫자 4자리예요');return;}
-  if(p1!==p2){toast('PIN 확인이 일치하지 않아요');return;}
-  try{
-    await DB.studentSignup(name,p1);
-    toast('가입 완료! 로그인해주세요 ✦');
-    setLoginTab('stu');
-    await enterLogin();
-    $('loginName').value=name;
-  }catch(e){toast('가입 실패: '+e.message);}
+const name=$('suName').value.trim();
+const p1=$('suPin').value.trim(), p2=$('suPin2').value.trim();
+if(name.length<1){toast('이름을 입력하세요');return;}
+if(!/^\d{4}$/.test(p1)){toast('PIN은 숫자 4자리예요');return;}
+if(p1!==p2){toast('PIN 확인이 일치하지 않아요');return;}
+try{
+const newId=await DB.studentSignup(name,p1);
+try{await DB.saveAvatar(newId,suAvDraft);}catch(e){}
+suAvDraft={type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'};
+toast('가입 완료! 로그인해주세요 ✦');
+setLoginTab('stu');
+await enterLogin();
+$('loginName').value=name;
+}catch(e){toast('가입 실패: '+e.message);}
 });
-
 /* ================= 학생 홈 ================= */
 function missionOf(day){const m=(activeWeek&&activeWeek.mission_pack&&activeWeek.mission_pack.missions)||[];return m.find(x=>x.day===day);}
 function subOf(day){return mySubs.find(s=>s.day===day);}
 async function refreshState(){
-  activeWeek=await DB.getActiveWeek();
-  mySubs=session&&session.role==='student'? (await DB.getSubmissions(activeWeek?activeWeek.id:'x')).filter(s=>s.student_id===session.id):[];
+activeWeek=await DB.getActiveWeek();
+mySubs=session&&session.role==='student'? (await DB.getSubmissions(activeWeek?activeWeek.id:'x')).filter(s=>s.student_id===session.id):[];
 }
 async function renderHome(){
-  await refreshState();
-  $('homeAvatar').innerHTML=avatarSVG(session.avatar);
-  $('homeHello').textContent=session.name+'님, 오늘도 말씀 챌린지!';
-  $('homeWeek').textContent=activeWeek?('이번 주: '+activeWeek.title):'이번 주 미션 준비 중';
-  const t=activeWeek?await DB.myTalents(session.id,activeWeek.id):0;
-  $('homeTalent').textContent=t;
-  const today=todayDay();
-  $('weekProg').innerHTML=DAYS.map(d=>{
-    const done=!!subOf(d);let cls=done?'done':'';
-    if(d===today)cls+=' today';
-    return '<div class="day '+cls+'">'+DAY_KO[d]+'</div>';
-  }).join('');
-  const doneCount=mySubs.length;
-  $('progBar').style.width=Math.round(doneCount/6*100)+'%';
-  const box=$('todayBox');
-  if(!activeWeek){box.innerHTML='<div class="card center"><div class="big-emoji">☕</div><h2>이번 주 미션 준비 중</h2><p class="muted">관리자가 미션을 열면 여기에 표시돼요.</p></div>';return;}
-  if(today==='sun'){
-    box.innerHTML='<div class="mission-hero"><div class="d">🌞 주일</div><h2>한 주 수고했어요!</h2><p>이번 주 '+doneCount+'/6 미션 완료 · '+t+' 달란트 적립<br>주일 예배에서 만나요 🙌</p></div>'
-      +'<div class="card center"><button class="btn sub" onclick="go(\'scr-rank\')">🏆 주간 랭킹 보기</button></div>';
-    return;
-  }
-  const m=missionOf(today), sub=subOf(today);
-  if(!m){box.innerHTML='<div class="card center"><p class="muted">오늘('+DAY_KO[today]+'요일) 미션이 없어요.</p></div>';return;}
-  box.innerHTML='<div class="mission-hero"><div class="d">'+DAY_KO[today]+'요일 · '+TYPE_KO[m.type]+'</div><h2>'+TYPE_EMOJI[m.type]+' '+esc(m.title)+'</h2><p>'+esc(activeWeek.mission_pack.week_title||activeWeek.title)+'</p></div>'
-    +'<div class="card center">'
-    +(sub
-      ? '<div class="big-emoji">🎉</div><h2>오늘 미션 완료!</h2><p class="muted">+'+(sub.talents||0)+' 달란트 적립됐어요</p>'
-      : '<span class="talent-pill">🌾 '+m.talents+' 달란트</span><button class="btn" onclick="openMission(\''+today+'\')">미션 하러 가기 →</button>')
-    +'</div>';
+await refreshState();
+$('homeAvatar').innerHTML=avatarSVG(session.avatar);
+$('homeHello').textContent=session.name+'님, 오늘도 말씀 챌린지!';
+$('homeWeek').textContent=activeWeek?('이번 주: '+activeWeek.title):'이번 주 미션 준비 중';
+const t=activeWeek?await DB.myTalents(session.id,activeWeek.id):0;
+$('homeTalent').textContent=t;
+const today=todayDay();
+$('weekProg').innerHTML=DAYS.map(d=>{
+const done=!!subOf(d);let cls=done?'done':'';
+if(d===today)cls+=' today';
+return '<div class="day '+cls+'">'+DAY_KO[d]+'</div>';
+}).join('');
+const doneCount=mySubs.length;
+$('progBar').style.width=Math.round(doneCount/6*100)+'%';
+const box=$('todayBox');
+let hero='';
+if(!activeWeek){hero='<div class="card center"><div class="big-emoji">☕</div><h2>이번 주 미션 준비 중</h2><p class="muted">관리자가 미션을 열면 여기에 표시돼요.</p></div>';}
+else if(today==='sun'){
+hero='<div class="mission-hero"><div class="d">🌞 주일</div><h2>한 주 수고했어요!</h2><p>이번 주 '+doneCount+'/6 미션 완료 · '+t+' 달란트 적립<br>주일 예배에서 만나요 🙌</p></div>'
++'<div class="card center"><button class="btn sub" onclick="go(\'scr-rank\')">🏆 주간 랭킹 보기</button></div>';
 }
-
+else{
+const m=missionOf(today), sub=subOf(today);
+if(!m){hero='<div class="card center"><p class="muted">오늘('+DAY_KO[today]+'요일) 미션이 없어요.</p></div>';}
+else{
+hero='<div class="mission-hero"><div class="d">'+DAY_KO[today]+'요일 · '+TYPE_KO[m.type]+'</div><h2>'+TYPE_EMOJI[m.type]+' '+esc(m.title)+'</h2><p>'+esc(activeWeek.mission_pack.week_title||activeWeek.title)+'</p></div>'
++'<div class="card center">'
++(sub
+? '<div class="big-emoji">🎉</div><h2>오늘 미션 완료!</h2><p class="muted">+'+(sub.talents||0)+' 달란트 적립됐어요</p>'
+: '<span class="talent-pill">🌾 '+m.talents+' 달란트</span><button class="btn" onclick="openMission(\''+today+'\')">미션 하러 가기 →</button>')
++'</div>';
+}
+}
+box.innerHTML=hero+weekListHTML();
+}
+function weekListHTML(){
+if(!activeWeek) return '';
+const today=todayDay();
+const stOf=d=>{
+if(subOf(d)) return ['done','✅ 완료'];
+if(d===today) return ['today','👉 오늘'];
+if(store.testMode) return ['past','🧪 수행'];
+if(today==='sun'||DAYS.indexOf(d)<DAYS.indexOf(today)) return ['past','👀 보기'];
+return ['future','🔒 예정'];
+};
+let h='<div class="card"><h3 style="margin:0 0 4px;">📅 이번 주 미션</h3><div class="week-list">';
+DAYS.forEach(d=>{
+const m=missionOf(d), st=stOf(d);
+h+='<button class="week-row '+st[0]+'" onclick="openDay(\''+d+'\')">'
++'<span class="wr-day">'+DAY_KO[d]+'</span>'
++'<span class="wr-title">'+esc(m?m.title:'미션 없음')+'</span>'
++'<span class="wr-st">'+st[1]+'</span></button>';
+});
+h+='</div>';
+if(store.testMode) h+='<p class="muted" style="font-size:12.5px;margin:10px 0 0;">🧪 테스트 모드 — 모든 요일 미션을 수행할 수 있어요</p>';
+return h+'</div>';
+}
+function openDay(d){
+const m=missionOf(d);
+if(!m){toast('이 요일 미션이 없어요');return;}
+if(subOf(d)){toast('이미 완료한 미션이에요 🎉');return;}
+const today=todayDay();
+if(d===today||store.testMode){ openMission(d); return; }
+if(today==='sun'||DAYS.indexOf(d)<DAYS.indexOf(today)){ openMission(d,{readonly:true}); return; }
+toast('아직 열리지 않은 미션이에요 🔒');
+}
 /* ================= 미션 수행 ================= */
 let curMission=null, quizSel=null;
-function openMission(day){
-  const m=missionOf(day); if(!m)return;
-  curMission={day,mission:m}; quizSel=null;
-  const box=$('missionBox'); const d=m.data||{};
-  let inner='<div class="card"><span class="talent-pill">🌾 '+m.talents+' 달란트</span>'
-    +'<h2 style="margin-top:8px;">'+TYPE_EMOJI[m.type]+' '+esc(m.title)+'</h2>'
-    +'<p class="muted">'+DAY_KO[day]+'요일 · '+TYPE_KO[m.type]+'</p></div>';
-  if(m.type==='quiz'){
-    inner+='<div class="card"><p style="font-weight:700;">'+esc(d.question)+'</p><div id="quizBox">'
-      +(d.choices||[]).map((c,i)=>'<button class="quiz-choice" onclick="quizPick('+i+',this)">'+esc(c)+'</button>').join('')
-      +'</div><div id="quizExp"></div><button class="btn hidden" id="quizDone" onclick="finishMission({})">완료하기</button></div>';
-  }else if(m.type==='application'){
-    inner+='<div class="card"><p style="font-weight:700;">'+esc(d.prompt)+'</p><textarea id="appText" placeholder="마음에 남은 말씀과 적용을 자유롭게 나눠보세요 ✍️"></textarea><button class="btn" onclick="finishMission({text:$(\'appText\').value.trim()})">나누기 완료</button></div>';
-  }else if(m.type==='action'){
-    inner+='<div class="card"><p class="muted">다 실천하면 완료 버튼이 활성화돼요.</p><div id="actBox">'
-      +(d.tasks||[]).map((t,i)=>'<label class="check-item"><input type="checkbox" onchange="actCheck(this)"> <span>'+esc(t)+'</span></label>').join('')
-      +'</div><button class="btn" id="actDone" disabled onclick="finishMission({tasks:'+(d.tasks||[]).length+'})">다 했어요!</button></div>';
-  }else if(m.type==='photo'){
-    inner+='<div class="card"><p style="font-weight:700;">'+esc(d.prompt)+'</p><input type="file" id="photoFile" accept="image/*"><div id="photoPrev" style="margin-top:10px;"></div><button class="btn" id="photoDone" disabled onclick="submitPhoto()">인증샷 올리기</button></div>';
-    setTimeout(()=>{
-      $('photoFile').addEventListener('change',e=>{
-        const f=e.target.files[0]; if(!f)return;
-        const r=new FileReader(); r.onload=()=>{$('photoPrev').innerHTML='<img src="'+r.result+'" style="width:100%;border-radius:12px;">';$('photoDone').disabled=false;$('photoDone').dataset.url='';window._photoFile=f;};
-        r.readAsDataURL(f);
-      });
-    },0);
-  }else if(m.type==='worship'){
-    inner+='<div class="card center"><div class="big-emoji">🎵</div><h2>'+esc(d.title||'추천 찬양')+'</h2>'
-      +(d.artist?'<p class="muted">'+esc(d.artist)+'</p>':'')
-      +'<a class="btn mint" style="text-decoration:none;display:block;" href="'+esc(d.youtube||'#')+'" target="_blank" rel="noopener">▶ 찬양 듣기</a>'
-      +'<button class="btn sub" onclick="finishMission({listened:true})">다 들었어요 🙏</button></div>';
-  }
-  box.innerHTML=inner;
-  go('scr-mission');
+function openMission(day,opts){
+const m=missionOf(day); if(!m)return;
+const RO=!!(opts&&opts.readonly);
+curMission={day,mission:m}; quizSel=null;
+const box=$('missionBox'); const d=m.data||{};
+const noSubmit='<p class="muted" style="margin-top:10px;">👀 지난 미션은 볼 수만 있어요</p>';
+let inner='<div class="card"><span class="talent-pill">🌾 '+m.talents+' 달란트</span>'
++'<h2 style="margin-top:8px;">'+TYPE_EMOJI[m.type]+' '+esc(m.title)+'</h2>'
++'<p class="muted">'+DAY_KO[day]+'요일 · '+TYPE_KO[m.type]+'</p></div>';
+if(m.type==='quiz'){
+inner+='<div class="card"><p style="font-weight:700;">'+esc(d.question)+'</p><div id="quizBox">'
++(d.choices||[]).map((c,i)=>'<button class="quiz-choice" onclick="quizPick('+i+',this)">'+esc(c)+'</button>').join('')
++'</div><div id="quizExp"></div>'
++(RO?noSubmit:'<button class="btn hidden" id="quizDone" onclick="finishMission({})">완료하기</button>')+'</div>';
+}else if(m.type==='application'){
+inner+='<div class="card"><p style="font-weight:700;">'+esc(d.prompt)+'</p>'
++(RO?noSubmit:'<textarea id="appText" placeholder="마음에 남은 말씀과 적용을 자유롭게 나눠보세요 ✍️"></textarea><button class="btn" onclick="finishMission({text:$(\'appText\').value.trim()})">나누기 완료</button>')+'</div>';
+}else if(m.type==='action'){
+inner+='<div class="card">'
++(RO
+? '<p style="font-weight:700;margin-top:0;">실천 목록</p><ul style="margin:6px 0;padding-left:20px;">'+(d.tasks||[]).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>'+noSubmit
+: '<p class="muted">다 실천하면 완료 버튼이 활성화돼요.</p><div id="actBox">'
++(d.tasks||[]).map((t,i)=>'<label class="check-item"><input type="checkbox" onchange="actCheck(this)"> <span>'+esc(t)+'</span></label>').join('')
++'</div><button class="btn" id="actDone" disabled onclick="finishMission({tasks:'+(d.tasks||[]).length+'})">다 했어요!</button>')
++'</div>';
+}else if(m.type==='photo'){
+if(RO){
+inner+='<div class="card"><p style="font-weight:700;">'+esc(d.prompt)+'</p>'+noSubmit+'</div>';
+}else{
+inner+='<div class="card"><p style="font-weight:700;">'+esc(d.prompt)+'</p><input type="file" id="photoFile" accept="image/*"><div id="photoPrev" style="margin-top:10px;"></div><button class="btn" id="photoDone" disabled onclick="submitPhoto()">인증샷 올리기</button></div>';
+setTimeout(()=>{
+$('photoFile').addEventListener('change',e=>{
+const f=e.target.files[0]; if(!f)return;
+const r=new FileReader(); r.onload=()=>{$('photoPrev').innerHTML='<img src="'+r.result+'" style="width:100%;border-radius:12px;">';$('photoDone').disabled=false;$('photoDone').dataset.url='';window._photoFile=f;};
+r.readAsDataURL(f);
+});
+},0);
+}
+}else if(m.type==='worship'){
+inner+='<div class="card center"><div class="big-emoji">🎵</div><h2>'+esc(d.title||'추천 찬양')+'</h2>'
++(d.artist?'<p class="muted">'+esc(d.artist)+'</p>':'')
++'<a class="btn mint" style="text-decoration:none;display:block;" href="'+esc(d.youtube||'#')+'" target="_blank" rel="noopener">▶ 찬양 듣기</a>'
++(RO?noSubmit:'<button class="btn sub" onclick="finishMission({listened:true})">다 들었어요 🙏</button>')+'</div>';
+}
+if(RO) inner='<div class="card center" style="background:#FFF9F3;border-color:var(--acc);"><b>👀 지난 '+DAY_KO[day]+'요일 미션</b><p class="muted" style="margin:4px 0 0;font-size:13px;">제출 기간이 지나서 볼 수만 있어요</p></div>'+inner;
+box.innerHTML=inner;
+go('scr-mission');
 }
 function quizPick(i,el){
-  document.querySelectorAll('.quiz-choice').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel'); quizSel=i;
-  const correct=curMission.mission.data.answer;
-  document.querySelectorAll('.quiz-choice').forEach((b,j)=>{b.style.pointerEvents='none';if(j===correct)b.classList.add('right');});
-  if(i!==correct)el.classList.add('wrong');
-  $('quizExp').innerHTML='<div class="card" style="background:#FDF6EC;margin-top:10px;"><b>'+(i===correct?'⭕ 정답!':'❌ 아쉬워요')+'</b><p class="muted">'+esc(curMission.mission.data.explain||'')+'</p></div>';
-  $('quizDone').classList.remove('hidden');
-  window._quizCorrect=(i===correct);
+document.querySelectorAll('.quiz-choice').forEach(b=>b.classList.remove('sel'));
+el.classList.add('sel'); quizSel=i;
+const correct=curMission.mission.data.answer;
+document.querySelectorAll('.quiz-choice').forEach((b,j)=>{b.style.pointerEvents='none';if(j===correct)b.classList.add('right');});
+if(i!==correct)el.classList.add('wrong');
+$('quizExp').innerHTML='<div class="card" style="background:#FDF6EC;margin-top:10px;"><b>'+(i===correct?'⭕ 정답!':'❌ 아쉬워요')+'</b><p class="muted">'+esc(curMission.mission.data.explain||'')+'</p></div>';
+$('quizDone').classList.remove('hidden');
+window._quizCorrect=(i===correct);
 }
 function actCheck(el){
-  el.closest('.check-item').classList.toggle('done',el.checked);
-  const all=[...document.querySelectorAll('#actBox input')];
-  $('actDone').disabled=!all.every(c=>c.checked);
+el.closest('.check-item').classList.toggle('done',el.checked);
+const all=[...document.querySelectorAll('#actBox input')];
+$('actDone').disabled=!all.every(c=>c.checked);
 }
 async function submitPhoto(){
-  const f=window._photoFile; if(!f)return;
-  $('photoDone').disabled=true; $('photoDone').textContent='올리는 중...';
-  try{const url=await DB.uploadPhoto(session.id,f);await finishMission({photo:true},url);}
-  catch(e){toast('업로드 실패: '+e.message);$('photoDone').disabled=false;$('photoDone').textContent='인증샷 올리기';}
+const f=window._photoFile; if(!f)return;
+$('photoDone').disabled=true; $('photoDone').textContent='올리는 중...';
+try{const url=await DB.uploadPhoto(session.id,f);await finishMission({photo:true},url);}
+catch(e){toast('업로드 실패: '+e.message);$('photoDone').disabled=false;$('photoDone').textContent='인증샷 올리기';}
 }
 async function finishMission(content,photoUrl){
-  const {day,mission}=curMission;
-  if(mission.type==='application'&&!content.text){toast('내용을 입력해주세요');return;}
-  if(mission.type==='quiz'&&!window._quizCorrect){ /* 오답도 제출은 허용하되 달란트는 절반? → 여기선 정답시에만 */ }
-  let talents=mission.talents;
-  if(mission.type==='quiz'&&!window._quizCorrect) talents=Math.floor(talents/2);
-  try{
-    await DB.submit(session.id,activeWeek.id,day,mission.type,content,photoUrl||null,talents);
-    // 6일 보너스 체크
-    const subs=(await DB.getSubmissions(activeWeek.id)).filter(s=>s.student_id===session.id);
-    if(subs.length>=6&&!(await DB.hasBonus(session.id,activeWeek.id))){
-      await DB.awardBonus(session.id,activeWeek.id,store.settings.bonus);
-      toast('🎉 6일 연속 완료! 보너스 +'+store.settings.bonus+'🌾');
-    }else toast('+'+talents+' 달란트 적립! 🌾');
-    window._photoFile=null;window._quizCorrect=null;
-    go('scr-home');
-  }catch(e){toast(e.message==='already submitted'?'이미 완료한 미션이에요':('제출 실패: '+e.message));}
+const {day,mission}=curMission;
+if(mission.type==='application'&&!content.text){toast('내용을 입력해주세요');return;}
+if(mission.type==='quiz'&&!window._quizCorrect){ /* 오답도 제출은 허용하되 달란트는 절반? → 여기선 정답시에만 */ }
+let talents=mission.talents;
+if(mission.type==='quiz'&&!window._quizCorrect) talents=Math.floor(talents/2);
+try{
+await DB.submit(session.id,activeWeek.id,day,mission.type,content,photoUrl||null,talents);
+// 6일 보너스 체크
+const subs=(await DB.getSubmissions(activeWeek.id)).filter(s=>s.student_id===session.id);
+if(subs.length>=6&&!(await DB.hasBonus(session.id,activeWeek.id))){
+await DB.awardBonus(session.id,activeWeek.id,store.settings.bonus);
+toast('🎉 6일 연속 완료! 보너스 +'+store.settings.bonus+'🌾');
+}else toast('+'+talents+' 달란트 적립! 🌾');
+window._photoFile=null;window._quizCorrect=null;
+go('scr-home');
+}catch(e){toast(e.message==='already submitted'?'이미 완료한 미션이에요':('제출 실패: '+e.message));}
 }
 </script>
-
 <script>
 /* ================= 피드 ================= */
 async function renderFeed(){
-  const box=$('feedList'); box.innerHTML='<p class="muted">불러오는 중...</p>';
-  if(!activeWeek){box.innerHTML='<p class="muted">이번 주 미션이 아직 없어요.</p>';return;}
-  const [subs,profiles]=await Promise.all([DB.getSubmissions(activeWeek.id),DB.getProfiles()]);
-  const pmap={}; profiles.forEach(p=>pmap[p.id]=p);
-  const cutoff=Date.now()-28*24*3600*1000;
-  const items=subs.filter(s=>(s.mission_type==='application'||s.mission_type==='photo')&&new Date(s.created_at).getTime()>cutoff);
-  if(!items.length){box.innerHTML='<p class="muted">아직 올라온 나눔이 없어요. 첫 번째로 나눠보세요! 🌱</p>';return;}
-  box.innerHTML=items.map(s=>{
-    const p=pmap[s.student_id]||{name:'?',avatar:{}};
-    let body='';
-    if(s.mission_type==='photo'&&s.photo_url) body='<img class="feed-photo" src="'+esc(s.photo_url)+'">';
-    const txt=s.content&&s.content.text?'<p style="margin:6px 0 0;">'+esc(s.content.text)+'</p>':'';
-    return '<div class="feed-item"><span class="av">'+avatarSVG(p.avatar)+'</span><div class="feed-body">'
-      +'<div class="feed-head"><b>'+esc(p.name)+'</b> · '+DAY_KO[s.day]+'요일 '+(TYPE_EMOJI[s.mission_type]||'')+' '+fmtDate(s.created_at)+'</div>'
-      +txt+body+'</div></div>';
-  }).join('');
+const box=$('feedList'); box.innerHTML='<p class="muted">불러오는 중...</p>';
+if(!activeWeek){box.innerHTML='<p class="muted">이번 주 미션이 아직 없어요.</p>';return;}
+const [subs,profiles]=await Promise.all([DB.getSubmissions(activeWeek.id),DB.getProfiles()]);
+const pmap={}; profiles.forEach(p=>pmap[p.id]=p);
+const cutoff=Date.now()-28*24*3600*1000;
+const items=subs.filter(s=>(s.mission_type==='application'||s.mission_type==='photo')&&new Date(s.created_at).getTime()>cutoff);
+if(!items.length){box.innerHTML='<p class="muted">아직 올라온 나눔이 없어요. 첫 번째로 나눠보세요! 🌱</p>';return;}
+let cmap={};
+try{
+const allC=await DB.getCommentsFor(items.map(s=>s.id));
+allC.forEach(c=>{(cmap[c.submission_id]=cmap[c.submission_id]||[]).push(c);});
+}catch(e){}
+box.innerHTML=items.map(s=>{
+const p=pmap[s.student_id]||{name:'?',avatar:{}};
+const cs=cmap[s.id]||[];
+let body='';
+if(s.mission_type==='photo'&&s.photo_url) body='<img class="feed-photo" src="'+esc(s.photo_url)+'">';
+const txt=s.content&&s.content.text?'<p style="margin:6px 0 0;">'+esc(s.content.text)+'</p>':'';
+return '<div class="feed-item"><span class="av">'+avatarSVG(p.avatar)+'</span><div class="feed-body">'
++'<div class="feed-head"><b>'+esc(p.name)+'</b> · '+DAY_KO[s.day]+'요일 '+(TYPE_EMOJI[s.mission_type]||'')+' '+fmtDate(s.created_at)+'</div>'
++txt+body
++'<div><button class="cmt-toggle" id="cmtt-'+s.id+'" onclick="toggleCmt(\''+s.id+'\')">💬 댓글 '+cs.length+'개</button></div>'
++'<div class="cmt-box hidden" id="cmt-'+s.id+'"><div class="cmt-list">'+cmtListHTML(cs)+'</div>'
++'<div class="cmt-form"><input id="cmtin-'+s.id+'" maxlength="500" placeholder="따뜻한 댓글을 남겨보세요 💬"><button class="btn sub" onclick="sendCmt(\''+s.id+'\')">등록</button></div></div>'
++'</div></div>';
+}).join('');
 }
-
+function cmtListHTML(cs){
+if(!cs||!cs.length) return '<p class="muted" style="font-size:13px;margin:4px 0;">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</p>';
+return cs.map(c=>'<div class="cmt"><b>'+esc(c.author_name||'익명')+'</b><span>'+esc(c.text)+'</span><span class="cmt-date">'+fmtDate(c.created_at)+'</span></div>').join('');
+}
+async function toggleCmt(sid){
+const box=$('cmt-'+sid); if(!box) return;
+box.classList.toggle('hidden');
+if(!box.classList.contains('hidden')){
+try{
+const cs=await DB.getComments(sid);
+box.querySelector('.cmt-list').innerHTML=cmtListHTML(cs);
+}catch(e){toast('댓글을 불러오지 못했어요');}
+}
+}
+async function sendCmt(sid){
+const inp=$('cmtin-'+sid); const t=(inp.value||'').trim();
+if(!t){toast('댓글을 입력하세요');return;}
+if(t.length>500){toast('댓글은 500자까지예요');return;}
+try{
+await DB.addComment(sid,session.id,session.name,t);
+inp.value='';
+const cs=await DB.getComments(sid);
+const box=$('cmt-'+sid); box.classList.remove('hidden');
+box.querySelector('.cmt-list').innerHTML=cmtListHTML(cs);
+const tg=$('cmtt-'+sid); if(tg) tg.textContent='💬 댓글 '+cs.length+'개';
+toast('댓글 등록! 💬');
+}catch(e){toast('댓글 실패: '+e.message);}
+}
 /* ================= 랭킹 ================= */
 async function renderRank(){
-  const box=$('rankList'); box.innerHTML='<p class="muted">불러오는 중...</p>';
-  if(!activeWeek){box.innerHTML='<p class="muted">이번 주 미션이 아직 없어요.</p>';return;}
-  $('rankWeek').textContent='이번 주: '+(activeWeek.mission_pack.week_title||activeWeek.title);
-  const [board,profiles]=await Promise.all([DB.weeklyBoard(activeWeek.id),DB.getProfiles()]);
-  const pmap={}; profiles.forEach(p=>pmap[p.id]=p);
-  // 미션 0개인 학생도 표시
-  const rows=profiles.filter(p=>p.role==='student').map(p=>{
-    const b=board.find(x=>x.student_id===p.id)||{mission_count:0,talents:0};
-    return {name:p.name,avatar:p.avatar,mission_count:b.mission_count,talents:b.talents};
-  }).sort((a,b)=>b.talents-a.talents);
-  box.innerHTML=rows.map((r,i)=>{
-    const cls=i===0?'top1':i===1?'top2':i===2?'top3':'';
-    return '<div class="rank-row '+cls+'"><div class="rank-num">'+(i+1)+'</div>'+avatarSVG(r.avatar)
-      +'<div class="rank-name">'+esc(r.name)+'<div class="muted" style="font-weight:400;">'+r.mission_count+'/6 미션</div></div>'
-      +'<div class="rank-t">🌾 '+r.talents+'</div></div>';
-  }).join('')||'<p class="muted">아직 적립된 달란트가 없어요.</p>';
+const box=$('rankList'); box.innerHTML='<p class="muted">불러오는 중...</p>';
+if(!activeWeek){box.innerHTML='<p class="muted">이번 주 미션이 아직 없어요.</p>';return;}
+$('rankWeek').textContent='이번 주: '+(activeWeek.mission_pack.week_title||activeWeek.title);
+const [board,profiles]=await Promise.all([DB.weeklyBoard(activeWeek.id),DB.getProfiles()]);
+const pmap={}; profiles.forEach(p=>pmap[p.id]=p);
+// 미션 0개인 학생도 표시
+const rows=profiles.filter(p=>p.role==='student').map(p=>{
+const b=board.find(x=>x.student_id===p.id)||{mission_count:0,talents:0};
+return {name:p.name,avatar:p.avatar,mission_count:b.mission_count,talents:b.talents};
+}).sort((a,b)=>b.talents-a.talents);
+box.innerHTML=rows.map((r,i)=>{
+const cls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+return '<div class="rank-row '+cls+'"><div class="rank-num">'+(i+1)+'</div>'+avatarSVG(r.avatar)
++'<div class="rank-name">'+esc(r.name)+'<div class="muted" style="font-weight:400;">'+r.mission_count+'/6 미션</div></div>'
++'<div class="rank-t">🌾 '+r.talents+'</div></div>';
+}).join('')||'<p class="muted">아직 적립된 달란트가 없어요.</p>';
 }
-
 /* ================= 아바타 에디터 ================= */
 let avDraft={type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'};
+function avatarPickerHTML(p){
+return '<div class="av-preview" id="'+p+'Preview"></div>'
++'<h3>종류</h3><div class="av-grid" id="'+p+'Types"></div>'
++'<h3>색상</h3><div class="swatch-grid" id="'+p+'Colors"></div>'
++'<h3>배경</h3><div class="swatch-grid" id="'+p+'Bgs"></div>'
++'<h3>악세사리</h3><div class="av-grid" id="'+p+'Accs" style="grid-template-columns:repeat(4,1fr);"></div>';
+}
+function bindAvatarPicker(p,get,set){
+const g=get();
+const re=()=>bindAvatarPicker(p,get,set);
+$(p+'Preview').innerHTML=avatarSVG(g);
+$(p+'Types').innerHTML=AV_TYPES.map(t=>'<button data-t="'+t+'" class="'+(g.type===t?'on':'')+'">'+avatarSVG({type:t,color:g.color,bg:'#fff',acc:'none'})+'<br>'+AV_TYPE_KO[t]+'</button>').join('');
+$(p+'Types').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const d=get();d.type=b.dataset.t;set(d);re();}));
+$(p+'Colors').innerHTML=AV_COLORS.map(c=>'<div class="swatch '+(g.color===c?'on':'')+'" data-c="'+c+'" style="background:'+c+'"></div>').join('');
+$(p+'Colors').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{const d=get();d.color=s.dataset.c;set(d);re();}));
+$(p+'Bgs').innerHTML=AV_BGS.map(c=>'<div class="swatch '+(g.bg===c?'on':'')+'" data-c="'+c+'" style="background:'+c+'"></div>').join('');
+$(p+'Bgs').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{const d=get();d.bg=s.dataset.c;set(d);re();}));
+$(p+'Accs').innerHTML=AV_ACCS.map(a=>'<button data-a="'+a+'" class="'+(g.acc===a?'on':'')+'">'+AV_ACC_KO[a]+'</button>').join('');
+$(p+'Accs').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const d=get();d.acc=b.dataset.a;set(d);re();}));
+}
 function renderAvatarEditor(){
-  avDraft=Object.assign({type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'},session.avatar||{});
-  const draw=()=>{$('avPreview').innerHTML=avatarSVG(avDraft);};
-  $('avTypes').innerHTML=AV_TYPES.map(t=>'<button data-t="'+t+'" class="'+(avDraft.type===t?'on':'')+'">'+avatarSVG({type:t,color:avDraft.color,bg:'#fff',acc:'none'})+'<br>'+AV_TYPE_KO[t]+'</button>').join('');
-  $('avTypes').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{avDraft.type=b.dataset.t;renderAvatarEditor();}));
-  $('avColors').innerHTML=AV_COLORS.map(c=>'<div class="swatch '+(avDraft.color===c?'on':'')+'" data-c="'+c+'" style="background:'+c+'"></div>').join('');
-  $('avColors').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{avDraft.color=s.dataset.c;renderAvatarEditor();}));
-  $('avBgs').innerHTML=AV_BGS.map(c=>'<div class="swatch '+(avDraft.bg===c?'on':'')+'" data-c="'+c+'" style="background:'+c+'"></div>').join('');
-  $('avBgs').querySelectorAll('.swatch').forEach(s=>s.addEventListener('click',()=>{avDraft.bg=s.dataset.c;renderAvatarEditor();}));
-  $('avAccs').innerHTML=AV_ACCS.map(a=>'<button data-a="'+a+'" class="'+(avDraft.acc===a?'on':'')+'">'+AV_ACC_KO[a]+'</button>').join('');
-  $('avAccs').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{avDraft.acc=b.dataset.a;renderAvatarEditor();}));
-  draw();
+avDraft=Object.assign({type:'person',color:'#FFE0BD',bg:'#FFE8E8',acc:'none'},session.avatar||{});
+$('avPicker').innerHTML=avatarPickerHTML('av');
+bindAvatarPicker('av',()=>avDraft,v=>{avDraft=v;});
 }
 $('avSave').addEventListener('click',async()=>{
-  try{await DB.saveAvatar(session.id,avDraft);session.avatar=avDraft;store.session=session;$('meAvatar').innerHTML=avatarSVG(avDraft);toast('아바타 저장됐어요! 🎭');}
-  catch(e){toast('저장 실패: '+e.message);}
+try{await DB.saveAvatar(session.id,avDraft);session.avatar=avDraft;store.session=session;$('meAvatar').innerHTML=avatarSVG(avDraft);toast('아바타 저장됐어요! 🎭');}
+catch(e){toast('저장 실패: '+e.message);}
 });
 </script>
-
 <script>
 /* ================= 관리자 ================= */
 document.querySelectorAll('[data-atab]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-atab]').forEach(x=>x.classList.remove('on'));b.classList.add('on');
-  ['students','week','talents','settings'].forEach(t=>$('atab-'+t).classList.toggle('hidden',t!==b.dataset.atab));
-  if(b.dataset.atab==='talents')renderTalentBoard();
-  if(b.dataset.atab==='settings')renderTalentSettings();
+document.querySelectorAll('[data-atab]').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+['students','week','talents','settings'].forEach(t=>$('atab-'+t).classList.toggle('hidden',t!==b.dataset.atab));
+if(b.dataset.atab==='talents')renderTalentBoard();
+if(b.dataset.atab==='settings')renderTalentSettings();
 }));
 async function renderAdmin(){
-  const profiles=await DB.getProfiles();
-  const stu=profiles.filter(p=>p.role==='student');
-  $('stuList').innerHTML=stu.length?('<table class="t"><tr><th>이름</th><th>아바타</th><th></th></tr>'+stu.map(p=>'<tr><td>'+esc(p.name)+'</td><td style="width:52px;">'+avatarSVG(p.avatar)+'</td><td style="width:64px;"><button class="btn sub" data-del="'+p.id+'" style="margin:0;padding:8px;font-size:12px;">삭제</button></td></tr>').join('')+'</table>'):'<p class="muted">등록된 학생이 없어요.</p>';
-  $('stuList').querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',async()=>{
-    if(!confirm('이 학생을 삭제할까요? 제출 기록도 함께 지워져요.'))return;
-    try{await DB.deleteStudent(session.id,b.dataset.del);toast('삭제됐어요');renderAdmin();}
-    catch(e){toast('삭제 실패: '+e.message);}
-  }));
-  const d=new Date(); d.setDate(d.getDate()+(7-d.getDay())%7); // 이번 주 주일
-  if(!$('wkDate').value)$('wkDate').value=d.toISOString().slice(0,10);
+const profiles=await DB.getProfiles();
+const stu=profiles.filter(p=>p.role==='student');
+$('stuList').innerHTML=stu.length?('<table class="t"><tr><th>이름</th><th>아바타</th><th></th></tr>'+stu.map(p=>'<tr><td>'+esc(p.name)+'</td><td style="width:52px;">'+avatarSVG(p.avatar)+'</td><td style="width:64px;"><button class="btn sub" data-del="'+p.id+'" style="margin:0;padding:8px;font-size:12px;">삭제</button></td></tr>').join('')+'</table>'):'<p class="muted">등록된 학생이 없어요.</p>';
+$('stuList').querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',async()=>{
+if(!confirm('이 학생을 삭제할까요? 제출 기록도 함께 지워져요.'))return;
+try{await DB.deleteStudent(session.id,b.dataset.del);toast('삭제됐어요');renderAdmin();}
+catch(e){toast('삭제 실패: '+e.message);}
+}));
+const d=new Date(); d.setDate(d.getDate()+(7-d.getDay())%7); // 이번 주 주일
+if(!$('wkDate').value)$('wkDate').value=d.toISOString().slice(0,10);
 }
 $('addStuBtn').addEventListener('click',async()=>{
-  const name=$('newStuName').value.trim(), pin=$('newStuPin').value.trim();
-  if(!name||pin.length!==4){toast('이름과 PIN 4자리를 입력하세요');return;}
-  try{await DB.createStudent(session.id,name,pin);$('newStuName').value='';$('newStuPin').value='';toast(name+'님 등록 완료! PIN: '+pin);renderAdmin();}
-  catch(e){toast('등록 실패: '+e.message);}
+const name=$('newStuName').value.trim(), pin=$('newStuPin').value.trim();
+if(!name||pin.length!==4){toast('이름과 PIN 4자리를 입력하세요');return;}
+try{await DB.createStudent(session.id,name,pin);$('newStuName').value='';$('newStuPin').value='';toast(name+'님 등록 완료! PIN: '+pin);renderAdmin();}
+catch(e){toast('등록 실패: '+e.message);}
 });
 function parsePack(){
-  try{
-    const p=JSON.parse($('wkPack').value);
-    if(!p.missions||!Array.isArray(p.missions))throw new Error('missions 배열이 필요해요');
-    for(const m of p.missions){if(!m.day||!m.type||!m.title)throw new Error('미션에 day/type/title이 필요해요');}
-    return p;
-  }catch(e){toast('JSON 오류: '+e.message);return null;}
+try{
+const p=JSON.parse($('wkPack').value);
+if(!p.missions||!Array.isArray(p.missions))throw new Error('missions 배열이 필요해요');
+for(const m of p.missions){if(!m.day||!m.type||!m.title)throw new Error('미션에 day/type/title이 필요해요');}
+return p;
+}catch(e){toast('JSON 오류: '+e.message);return null;}
 }
 $('packPreviewBtn').addEventListener('click',()=>{
-  const p=parsePack(); if(!p)return;
-  $('packPreview').innerHTML='<h3>미리보기</h3>'+p.missions.map(m=>'<div class="card" style="padding:12px;"><b>'+DAY_KO[m.day]+' · '+TYPE_EMOJI[m.type]+' '+esc(m.title)+'</b> <span class="talent-pill">🌾 '+(m.talents||0)+'</span></div>').join('');
+const p=parsePack(); if(!p)return;
+$('packPreview').innerHTML='<h3>미리보기</h3>'+p.missions.map(m=>'<div class="card" style="padding:12px;"><b>'+DAY_KO[m.day]+' · '+TYPE_EMOJI[m.type]+' '+esc(m.title)+'</b> <span class="talent-pill">🌾 '+(m.talents||0)+'</span></div>').join('');
 });
 $('packSaveBtn').addEventListener('click',async()=>{
-  const p=parsePack(); if(!p)return;
-  const title=$('wkTitle').value.trim()||p.week_title||'이번 주 말씀';
-  const date=$('wkDate').value||new Date().toISOString().slice(0,10);
-  try{await DB.createWeek(session.id,title,date,$('wkSermon').value.trim(),p);toast('이번 주 미션이 열렸어요! 🌱');$('wkPack').value='';$('packPreview').innerHTML='';}
-  catch(e){toast('저장 실패: '+e.message);}
+const p=parsePack(); if(!p)return;
+const title=$('wkTitle').value.trim()||p.week_title||'이번 주 말씀';
+const date=$('wkDate').value||new Date().toISOString().slice(0,10);
+try{await DB.createWeek(session.id,title,date,$('wkSermon').value.trim(),p);toast('이번 주 미션이 열렸어요! 🌱');$('wkPack').value='';$('packPreview').innerHTML='';}
+catch(e){toast('저장 실패: '+e.message);}
 });
 $('copyPromptBtn').addEventListener('click',async()=>{
-  const sermon=$('wkSermon').value.trim();
-  if(!sermon){toast('먼저 설교 원고를 붙여넣으세요');return;}
-  const s=store.settings;
-  const prompt='아래 주일 설교 원고를 분석해서, 청소년(중·고등학생)이 월~토 매일 말씀을 적용할 수 있는 미션팩 JSON을 만들어줘.\n\n[미션 구성]\n- 월: quiz (말씀 이해 확인, 객관식 2문제)\n- 화: application (적용 나누기)\n- 수: action (실천 체크리스트 3개)\n- 목: photo (인증샷 챌린지)\n- 금: worship (설교 주제에 맞는 찬양 1곡 + YouTube 링크)\n- 토: application (한 주 돌아보기)\n\n[달란트] quiz '+s.quiz+', application '+s.application+', action '+s.action+', photo '+s.photo+', worship '+s.worship+'\n[포맷] 아래 JSON 스키마 그대로 출력해줘. 다른 설명 없이 JSON만.\n{"week_title":"설교 제목","missions":[{"day":"mon","type":"quiz","title":"...","talents":'+s.quiz+',"data":{"question":"...","choices":["..."],"answer":0,"explain":"..."}},{"day":"tue","type":"application","title":"...","talents":'+s.application+',"data":{"prompt":"..."}},{"day":"wed","type":"action","title":"...","talents":'+s.action+',"data":{"tasks":["..."]}},{"day":"thu","type":"photo","title":"...","talents":'+s.photo+',"data":{"prompt":"..."}},{"day":"fri","type":"worship","title":"...","talents":'+s.worship+',"data":{"title":"...","youtube":"https://..."}},{"day":"sat","type":"application","title":"...","talents":'+s.application+',"data":{"prompt":"..."}}]}\n[톤] 청소년 눈높이, 쉽고 재미있게. 너무 길지 않게.\n\n[설교 원고]\n'+sermon;
-  try{await navigator.clipboard.writeText(prompt);toast('프롬프트 복사됨! Muse 채팅에 붙여넣으세요 📋');}
-  catch(e){toast('복사 실패 — 직접 드래그해서 복사하세요');}
+const sermon=$('wkSermon').value.trim();
+if(!sermon){toast('먼저 설교 원고를 붙여넣으세요');return;}
+const s=store.settings;
+const prompt='아래 주일 설교 원고를 분석해서, 청소년(중·고등학생)이 월~토 매일 말씀을 적용할 수 있는 미션팩 JSON을 만들어줘.\n\n[미션 구성]\n- 월: quiz (말씀 이해 확인, 객관식 2문제)\n- 화: application (적용 나누기)\n- 수: action (실천 체크리스트 3개)\n- 목: photo (인증샷 챌린지)\n- 금: worship (설교 주제에 맞는 찬양 1곡 + YouTube 링크)\n- 토: application (한 주 돌아보기)\n\n[달란트] quiz '+s.quiz+', application '+s.application+', action '+s.action+', photo '+s.photo+', worship '+s.worship+'\n[포맷] 아래 JSON 스키마 그대로 출력해줘. 다른 설명 없이 JSON만.\n{"week_title":"설교 제목","missions":[{"day":"mon","type":"quiz","title":"...","talents":'+s.quiz+',"data":{"question":"...","choices":["..."],"answer":0,"explain":"..."}},{"day":"tue","type":"application","title":"...","talents":'+s.application+',"data":{"prompt":"..."}},{"day":"wed","type":"action","title":"...","talents":'+s.action+',"data":{"tasks":["..."]}},{"day":"thu","type":"photo","title":"...","talents":'+s.photo+',"data":{"prompt":"..."}},{"day":"fri","type":"worship","title":"...","talents":'+s.worship+',"data":{"title":"...","youtube":"https://..."}},{"day":"sat","type":"application","title":"...","talents":'+s.application+',"data":{"prompt":"..."}}]}\n[톤] 청소년 눈높이, 쉽고 재미있게. 너무 길지 않게.\n\n[설교 원고]\n'+sermon;
+try{await navigator.clipboard.writeText(prompt);toast('프롬프트 복사됨! Muse 채팅에 붙여넣으세요 📋');}
+catch(e){toast('복사 실패 — 직접 드래그해서 복사하세요');}
 });
 async function renderTalentBoard(){
-  const box=$('talentBoard'); box.innerHTML='<p class="muted">불러오는 중...</p>';
-  if(!activeWeek){await refreshState();}
-  if(!activeWeek){box.innerHTML='<p class="muted">열린 주간이 없어요.</p>';return;}
-  const [board,profiles,subs]=await Promise.all([DB.weeklyBoard(activeWeek.id),DB.getProfiles(),DB.getSubmissions(activeWeek.id)]);
-  const pmap={};profiles.forEach(p=>pmap[p.id]=p);
-  const rows=profiles.filter(p=>p.role==='student').map(p=>{
-    const b=board.find(x=>x.student_id===p.id)||{mission_count:0,talents:0};
-    const mine=subs.filter(s=>s.student_id===p.id);
-    const detail=DAYS.map(d=>{const s=mine.find(x=>x.day===d);return DAY_KO[d]+':'+(s?'⭕':'❌');}).join(' ');
-    return '<tr><td style="text-align:left;"><b>'+esc(p.name)+'</b><br><span class="muted">'+detail+'</span></td><td>'+b.mission_count+'/6</td><td><b>🌾 '+b.talents+'</b></td></tr>';
-  }).join('');
-  const total=board.reduce((a,b)=>a+(b.talents||0),0);
-  box.innerHTML='<p><b>'+esc(activeWeek.mission_pack.week_title||activeWeek.title)+'</b> · 총 적립 <b>🌾 '+total+'</b></p>'
-    +'<table class="t"><tr><th>학생</th><th>완료</th><th>달란트</th></tr>'+rows+'</table>';
+const box=$('talentBoard'); box.innerHTML='<p class="muted">불러오는 중...</p>';
+if(!activeWeek){await refreshState();}
+if(!activeWeek){box.innerHTML='<p class="muted">열린 주간이 없어요.</p>';return;}
+const [board,profiles,subs]=await Promise.all([DB.weeklyBoard(activeWeek.id),DB.getProfiles(),DB.getSubmissions(activeWeek.id)]);
+const pmap={};profiles.forEach(p=>pmap[p.id]=p);
+const rows=profiles.filter(p=>p.role==='student').map(p=>{
+const b=board.find(x=>x.student_id===p.id)||{mission_count:0,talents:0};
+const mine=subs.filter(s=>s.student_id===p.id);
+const detail=DAYS.map(d=>{const s=mine.find(x=>x.day===d);return DAY_KO[d]+':'+(s?'⭕':'❌');}).join(' ');
+return '<tr><td style="text-align:left;"><b>'+esc(p.name)+'</b><br><span class="muted">'+detail+'</span></td><td>'+b.mission_count+'/6</td><td><b>🌾 '+b.talents+'</b></td></tr>';
+}).join('');
+const total=board.reduce((a,b)=>a+(b.talents||0),0);
+box.innerHTML='<p><b>'+esc(activeWeek.mission_pack.week_title||activeWeek.title)+'</b> · 총 적립 <b>🌾 '+total+'</b></p>'
++'<table class="t"><tr><th>학생</th><th>완료</th><th>달란트</th></tr>'+rows+'</table>';
 }
 function renderTalentSettings(){
-  const s=store.settings;
-  $('talentSettings').innerHTML=['quiz','application','action','photo','worship','bonus'].map(k=>'<label>'+(TYPE_KO[k]||'6일 연속 보너스')+' 달란트</label><input type="number" id="ts_'+k+'" value="'+s[k]+'" min="0">').join('');
+const s=store.settings;
+$('talentSettings').innerHTML=['quiz','application','action','photo','worship','bonus'].map(k=>'<label>'+(TYPE_KO[k]||'6일 연속 보너스')+' 달란트</label><input type="number" id="ts_'+k+'" value="'+s[k]+'" min="0">').join('');
 }
 $('saveSettingsBtn').addEventListener('click',()=>{
-  const s={};['quiz','application','action','photo','worship','bonus'].forEach(k=>s[k]=parseInt($('ts_'+k).value)||0);
-  store.settings=s; toast('저장됐어요 (다음 제출부터 적용)');
+const s={};['quiz','application','action','photo','worship','bonus'].forEach(k=>s[k]=parseInt($('ts_'+k).value)||0);
+store.settings=s; toast('저장됐어요 (다음 제출부터 적용)');
 });
 $('changePinBtn').addEventListener('click',async()=>{
-  const c=$('admCurPin').value.trim(), n=$('admNewPin').value.trim(), n2=$('admNewPin2').value.trim();
-  if(!/^\d{4}$/.test(n)){toast('새 PIN은 숫자 4자리예요');return;}
-  if(n!==n2){toast('새 PIN 확인이 일치하지 않아요');return;}
-  try{
-    await DB.changeAdminPin(session.id,c,n);
-    $('admCurPin').value='';$('admNewPin').value='';$('admNewPin2').value='';
-    toast('PIN이 변경됐어요 🔑');
-  }catch(e){toast('변경 실패: '+e.message);}
+const c=$('admCurPin').value.trim(), n=$('admNewPin').value.trim(), n2=$('admNewPin2').value.trim();
+if(!/^\d{4}$/.test(n)){toast('새 PIN은 숫자 4자리예요');return;}
+if(n!==n2){toast('새 PIN 확인이 일치하지 않아요');return;}
+try{
+await DB.changeAdminPin(session.id,c,n);
+$('admCurPin').value='';$('admNewPin').value='';$('admNewPin2').value='';
+toast('PIN이 변경됐어요 🔑');
+}catch(e){toast('변경 실패: '+e.message);}
 });
 $('cfgResetBtn').addEventListener('click',()=>{if(confirm('연결 설정을 지우고 처음 화면으로 돌아갈까요?')){store.cfg=null;location.reload();}});
-
+$('testModeChk').checked=store.testMode;
+$('testModeChk').addEventListener('change',e=>{store.testMode=e.target.checked;toast(e.target.checked?'🧪 테스트 모드 켜짐 — 모든 요일 미션 수행 가능':'테스트 모드 꺼짐');});
 /* ================= 시작 ================= */
 (async function init(){
-  await DB.init();
-  const sess=store.session;
-  if(sess){
-    session=sess;
-    $('meBox').classList.remove('hidden');$('meName').textContent=sess.name+(sess.role==='admin'?' (관리자)':'');
-    $('meAvatar').innerHTML=avatarSVG(sess.avatar);
-    $('bottomNav').classList.remove('hidden');
-    $('navAdmin').classList.toggle('hidden',sess.role!=='admin');
-    $('demoBanner').classList.toggle('hidden',DB.mode!=='demo');
-    go(sess.role==='admin'?'scr-admin':'scr-home');
-  }else if(activeCfg()){enterLogin();}
-  else go('scr-config');
+await DB.init();
+const sess=store.session;
+if(sess){
+session=sess;
+$('meBox').classList.remove('hidden');$('meName').textContent=sess.name+(sess.role==='admin'?' (관리자)':'');
+$('meAvatar').innerHTML=avatarSVG(sess.avatar);
+$('bottomNav').classList.remove('hidden');
+$('navAdmin').classList.toggle('hidden',sess.role!=='admin');
+$('demoBanner').classList.toggle('hidden',DB.mode!=='demo');
+go(sess.role==='admin'?'scr-admin':'scr-home');
+}else if(activeCfg()){enterLogin();}
+else go('scr-config');
 })();
 </script>
 </body>
