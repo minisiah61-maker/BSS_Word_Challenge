@@ -372,7 +372,7 @@ const DB={
   mode:'demo',
   async init(){
     sb=null; this.mode='demo';
-    const cfg=store.cfg;
+    const cfg=activeCfg();
     if(cfg&&cfg.url&&cfg.key&&(await loadSupabase())){
       try{sb=window.supabase.createClient(cfg.url,cfg.key);this.mode='supabase';}
       catch(e){sb=null;}
@@ -530,7 +530,7 @@ async function enterLogin(){
   const names=await DB.getProfiles();
   const stu=names.filter(p=>p.role==='student');
   $('loginName').innerHTML=stu.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>').join('')||'<option value="">(등록된 학생 없음)</option>';
-  $('backToCfg').classList.toggle('hidden',!!store.cfg);
+  $('backToCfg').classList.toggle('hidden',!!activeCfg());
   go('scr-login');
 }
 $('loginBtn').addEventListener('click',async()=>{
@@ -844,7 +844,7 @@ $('cfgResetBtn').addEventListener('click',()=>{if(confirm('연결 설정을 지�
     $('navAdmin').classList.toggle('hidden',sess.role!=='admin');
     $('demoBanner').classList.toggle('hidden',DB.mode!=='demo');
     go(sess.role==='admin'?'scr-admin':'scr-home');
-  }else if(store.cfg){enterLogin();}
+  }else if(activeCfg()){enterLogin();}
   else go('scr-config');
 })();
 </script>
