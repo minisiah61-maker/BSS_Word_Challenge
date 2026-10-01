@@ -123,6 +123,15 @@ table.t th{background:#FBF4E6; color:var(--muted);}
 .av-preview svg{width:150px; height:150px; border-radius:24px;}
 .av-status{font-size:13px; color:var(--muted); margin-top:8px; word-break:keep-all;}
 .feed-status{font-size:12px; color:var(--muted); margin:2px 0 4px; word-break:keep-all;}
+.ws-item{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+.ws-item:last-child{border-bottom:none;}
+.ws-thumb{width:96px; height:54px; border-radius:10px; object-fit:cover; flex-shrink:0; cursor:pointer; background:#F1E7D3;}
+.ws-info{flex:1; min-width:0;}
+.ws-info b{display:block; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.ws-info span{font-size:12px; color:var(--muted);}
+.ws-play{border:none; background:var(--acc); color:#fff; width:38px; height:38px; border-radius:50%; font-size:15px; cursor:pointer; flex-shrink:0;}
+.ws-player{margin:6px 0 10px; border-radius:12px; overflow:hidden;}
+.ws-player iframe{width:100%; aspect-ratio:16/9; border:none; display:block;}
 pre.pack{background:#2E2A28; color:#EDE6DE; border:1px solid var(--line); border-radius:12px; padding:12px; font-size:12px; overflow:auto; max-height:260px;}
 .hidden{display:none !important;}
 .row2{display:flex; gap:8px;}
@@ -227,6 +236,16 @@ pre.pack{background:#2E2A28; color:#EDE6DE; border:1px solid var(--line); border
 <button class="btn" id="avSave">저장하기</button>
 </div>
 </section>
+<!-- 찬양 -->
+<section class="screen" id="scr-worship">
+<div class="card" id="wsRecoBox"></div>
+<div class="card"><h2>💌 나의 찬양 공유하기</h2><p class="muted">일주일에 한 번 · 공유하면 🌾 5 달란트!</p>
+<div id="wsFormBox"></div>
+</div>
+<div class="card"><h2>🎧 친구들의 찬양</h2><p class="muted">이번 주 친구들이 공유한 찬양이에요.</p>
+<div id="wsList"></div>
+</div>
+</section>
 <!-- 랭킹 -->
 <section class="screen" id="scr-rank">
 <div class="card"><h2>🏆 달란트 랭킹</h2><p class="muted" id="rankWeek"></p><div id="rankList"></div></div>
@@ -285,6 +304,7 @@ pre.pack{background:#2E2A28; color:#EDE6DE; border:1px solid var(--line); border
 <button data-go="scr-home" class="on"><span class="ic">🏠</span>홈</button>
 <button data-go="scr-summary"><span class="ic">📖</span>요약</button>
 <button data-go="scr-feed"><span class="ic">📮</span>피드</button>
+<button data-go="scr-worship"><span class="ic">🎵</span>찬양</button>
 <button data-go="scr-avatar"><span class="ic">🎭</span>아바타</button>
 <button data-go="scr-rank"><span class="ic">🏆</span>랭킹</button>
 <button data-go="scr-admin" id="navAdmin" class="hidden"><span class="ic">🛠</span>관리</button>
@@ -554,6 +574,22 @@ async getWeekMoments(weekId){
 if(this.mode==='supabase'){const {data,error}=await sb.from('daily_moments').select('*').eq('week_id',weekId);if(error) throw error;return data||[];}
 return (demoDB.get().moments||[]).filter(m=>m.week_id===weekId);
 },
+/* 찬양 공유 (주 1회, 5달란트) */
+async shareWorship(studentId,weekId,title,youtubeUrl,youtubeId){
+if(this.mode==='supabase'){const {error}=await sb.rpc('share_worship',{p_student_id:studentId,p_week_id:weekId,p_title:title,p_youtube_url:youtubeUrl,p_youtube_id:youtubeId});if(error) throw error;return;}
+const d=demoDB.get();d.wshares=d.wshares||[];
+if(d.wshares.some(w=>w.week_id===weekId&&w.student_id===studentId)) throw new Error('이번 주에는 이미 공유했어요');
+d.wshares.push({id:uid(),student_id:studentId,week_id:weekId,title:title.trim(),youtube_url:youtubeUrl.trim(),youtube_id:youtubeId,talents:WS_TALENTS,created_at:new Date().toISOString()});
+d.ledger.push({id:uid(),student_id:studentId,week_id:weekId,amount:WS_TALENTS,reason:'worship share',created_at:new Date().toISOString()});demoDB.save(d);
+},
+async getWorshipShares(weekId){
+if(this.mode==='supabase'){const {data,error}=await sb.from('worship_shares').select('*').eq('week_id',weekId).order('created_at',{ascending:false});if(error) throw error;return data||[];}
+return (demoDB.get().wshares||[]).filter(w=>w.week_id===weekId).sort((a,b)=>b.created_at.localeCompare(a.created_at));
+},
+async myWorshipShare(studentId,weekId){
+const ws=await this.getWorshipShares(weekId);
+return ws.find(w=>w.student_id===studentId)||null;
+},
 async submit(studentId,weekId,day,type,content,photoUrl,talents){
 if(this.mode==='supabase'){const {error}=await sb.rpc('submit_mission',{p_student_id:studentId,p_week_id:weekId,p_day:day,p_type:type,p_content:content,p_photo:photoUrl,p_talents:talents});if(error) throw error;}
 else{const d=demoDB.get();if(d.submissions.some(s=>s.week_id===weekId&&s.student_id===studentId&&s.day===day&&s.mission_type===type)) throw new Error('already submitted');
@@ -572,6 +608,7 @@ async myTalents(studentId,weekId){
 const subs=await this.getSubmissions(weekId);
 let t=subs.filter(s=>s.student_id===studentId).reduce((a,s)=>a+(s.talents||0),0);
 try{const ms=await this.getWeekMoments(weekId);t+=ms.filter(m=>m.student_id===studentId).reduce((a,m)=>a+(m.talents||0),0);}catch(e){}
+try{const ws=await this.getWorshipShares(weekId);t+=ws.filter(w=>w.student_id===studentId).reduce((a,w)=>a+(w.talents||0),0);}catch(e){}
 return t;
 },
 async weeklyBoard(weekId){
@@ -579,6 +616,7 @@ if(this.mode==='supabase'){const {data}=await sb.from('weekly_talents').select('
 const d=demoDB.get();const map={};
 d.submissions.filter(s=>s.week_id===weekId).forEach(s=>{map[s.student_id]=map[s.student_id]||{student_id:s.student_id,mission_count:0,talents:0};map[s.student_id].mission_count++;map[s.student_id].talents+=s.talents||0;});
 (d.moments||[]).filter(m=>m.week_id===weekId).forEach(m=>{map[m.student_id]=map[m.student_id]||{student_id:m.student_id,mission_count:0,talents:0};map[m.student_id].talents+=m.talents||0;});
+(d.wshares||[]).filter(w=>w.week_id===weekId).forEach(w=>{map[w.student_id]=map[w.student_id]||{student_id:w.student_id,mission_count:0,talents:0};map[w.student_id].talents+=w.talents||0;});
 return Object.values(map).map(r=>{const p=d.profiles.find(x=>x.id===r.student_id);return {...r,name:p?p.name:'?',avatar:p?p.avatar:{}};}).sort((a,b)=>b.talents-a.talents);
 },
 async saveAvatar(studentId,avatar){
@@ -608,6 +646,7 @@ window.scrollTo(0,0);
 if(id==='scr-home') renderHome();
 if(id==='scr-summary') renderSummary();
 if(id==='scr-feed'){renderFeed();renderMoments();}
+if(id==='scr-worship') renderWorship();
 if(id==='scr-rank') renderRank();
 if(id==='scr-avatar') renderAvatarEditor();
 if(id==='scr-admin') renderAdmin();
@@ -874,6 +913,7 @@ box.innerHTML='<div class="sermon-title">'+esc(activeWeek.title)+'</div>'
 /* ================= 오늘의 순간 ================= */
 function todayStr(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});}
 const MOMENT_TALENTS=5;
+const WS_TALENTS=5; /* 찬양 공유 달란트 (금요일 찬양 미션과 동일) */
 async function renderMoments(){
 const box=$('momentBox'); if(!box) return;
 box.innerHTML='<p class="muted">불러오는 중...</p>';
@@ -924,6 +964,71 @@ renderMoments(); renderHome();
 }catch(e){toast('등록 실패: '+e.message);}
 });
 }
+}
+/* ================= 찬양 공유 ================= */
+function ytId(url){
+if(!url) return null;
+const m=String(url).match(/(?:youtube\.com\/(?:watch\?[^#]*v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+return m?m[1]:null;
+}
+function wsToggle(id,vid){
+const box=$('wsp-'+id);
+if(box.classList.contains('hidden')){ box.innerHTML='<iframe src="https://www.youtube.com/embed/'+vid+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'; box.classList.remove('hidden'); }
+else{ box.innerHTML=''; box.classList.add('hidden'); }
+}
+async function renderWorship(){
+const rb=$('wsRecoBox'), fb=$('wsFormBox'), lb=$('wsList');
+if(!rb) return;
+/* 1) 이번 주 추천 찬양 */
+let fri=null;
+try{ fri=(activeWeek.missions||[]).find(m=>m.day==='fri'&&m.type==='worship')||null; }catch(e){}
+if(fri&&fri.data){
+const d=fri.data;
+rb.innerHTML='<h2>🎵 이번 주 추천 찬양</h2><p style="font-weight:700;margin:6px 0;">'+esc(d.title||'추천 찬양')+'</p>'
++(d.artist?'<p class="muted">'+esc(d.artist)+'</p>':'')
++'<a class="btn mint" style="text-decoration:none;display:block;text-align:center;" href="'+esc(d.youtube||'#')+'" target="_blank" rel="noopener">▶ 유튜브에서 듣기</a>'
++'<p class="muted" style="font-size:13px;margin:8px 0 0;">금요일 미션에서 들으면 🌾 '+(fri.talents||5)+' 달란트!</p>';
+}else rb.innerHTML='<h2>🎵 이번 주 추천 찬양</h2><p class="muted">이번 주 추천 찬양이 아직 없어요.</p>';
+/* 2) 공유 폼 */
+if(!activeWeek){ fb.innerHTML='<p class="muted">진행 중인 주가 없어요.</p>'; }
+else{
+let mine=null;
+try{ mine=await DB.myWorshipShare(session.id,activeWeek.id); }catch(e){}
+if(mine){
+fb.innerHTML='<p><b>✅ 이번 주 공유 완료!</b> (+'+WS_TALENTS+'🌾)</p><p class="muted" style="font-size:13px;">"'+esc(mine.title)+'" — 다음 주에 또 공유해 보세요.</p>';
+}else{
+fb.innerHTML='<input id="wsTitle" maxlength="60" placeholder="찬양 제목 (예: 주의 높고 위대하심을)">'
++'<input id="wsUrl" placeholder="유튜브 링크 붙여넣기" style="margin-top:8px;">'
++'<button class="btn" id="wsSubmitBtn" style="margin-top:8px;">공유하기 💌 (+'+WS_TALENTS+'🌾)</button>';
+$('wsSubmitBtn').addEventListener('click',async()=>{
+const title=$('wsTitle').value.trim(), url=$('wsUrl').value.trim();
+const vid=ytId(url);
+if(!title){toast('찬양 제목을 입력하세요');return;}
+if(!vid){toast('올바른 유튜브 링크가 아니에요');return;}
+try{
+await DB.shareWorship(session.id,activeWeek.id,title,url,vid);
+toast('찬양 공유 완료! +'+WS_TALENTS+' 달란트 🌾');
+renderWorship(); renderHome();
+}catch(e){toast('공유 실패: '+e.message);}
+});
+}
+}
+/* 3) 친구들의 찬양 */
+lb.innerHTML='<p class="muted">불러오는 중...</p>';
+let all=[];
+try{ all=activeWeek?await DB.getWorshipShares(activeWeek.id):[]; }
+catch(e){ lb.innerHTML='<p class="muted">불러오지 못했어요.</p>'; return; }
+if(!all.length){ lb.innerHTML='<p class="muted">아직 공유된 찬양이 없어요. 첫 번째로 공유해 보세요! 🙌</p>'; return; }
+const profiles=await DB.getProfiles(); const pmap={}; profiles.forEach(p=>pmap[p.id]=p);
+lb.innerHTML=all.map(w=>{
+const p=pmap[w.student_id]||{name:'?',avatar:{}};
+const me=w.student_id===session.id?' <span class="muted">(나)</span>':'';
+const vid=w.youtube_id||ytId(w.youtube_url)||'';
+return '<div class="ws-item"><img class="ws-thumb" loading="lazy" src="https://i.ytimg.com/vi/'+vid+'/hqdefault.jpg" onclick="wsToggle(\''+w.id+'\',\''+vid+'\')">'
++'<div class="ws-info"><b>'+esc(w.title)+'</b><span>'+esc(p.name)+me+' · '+fmtDate(w.created_at)+'</span></div>'
++'<button class="ws-play" onclick="wsToggle(\''+w.id+'\',\''+vid+'\')">▶</button></div>'
++'<div class="ws-player hidden" id="wsp-'+w.id+'"></div>';
+}).join('');
 }
 /* ================= 피드 ================= */
 async function renderFeed(){
